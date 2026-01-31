@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>London Satellite Pilot 3D</title>
+    <title>London 3D Flight - Fixed Tracking</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
-        #map { height: 100%; width: 100%; position: absolute; background: #000; }
+        #map { height: 100%; width: 100%; position: absolute; background: #1a1a1a; }
         
         /* ✈️ Plane HUD */
         #plane-container {
@@ -18,7 +18,6 @@
             transition: transform 0.1s ease;
         }
 
-        /* Turbo Shake Animation */
         @keyframes turbo-shake {
             0% { transform: translate(0,0); }
             25% { transform: translate(2px, 2px); }
@@ -34,8 +33,9 @@
             border: 1px solid #00ff00; border-radius: 8px; width: 220px;
         }
         #mini-map { 
-            position: absolute; bottom: 30px; right: 30px; width: 180px; height: 180px; 
-            border: 2px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
+            position: absolute; bottom: 30px; right: 30px; width: 200px; height: 200px; 
+            border: 3px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         #setup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -43,7 +43,7 @@
             flex-direction: column; align-items: center; justify-content: center; color: white;
         }
         input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; border-radius: 5px; }
-        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
+        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; color: black; }
     </style>
 </head>
 <body>
@@ -62,10 +62,10 @@
     </div>
 
     <div id="ui-panel">
-        <h3 style="margin:0">SATELLITE HUD</h3>
+        <h3 style="margin:0">FLIGHT HUD</h3>
         <p>FUEL: <span id="fuel-display">100</span>%</p>
-        <div id="turbo-alert" style="color: #ff0000; font-weight: bold; display: none;">TURBO ENGAGED</div>
-        <p style="font-size: 0.7em; color: #aaa;">[W/S] Thrust/Reverse<br>[A/D] Steering<br>[SPACE] TURBO BOOST</p>
+        <div id="turbo-alert" style="color: #ff0000; font-weight: bold; display: none;">TURBO BOOST</div>
+        <p style="font-size: 0.7em; color: #aaa;">WASD: Movement<br>SPACE: Turbo</p>
     </div>
 
     <div id="mini-map"></div>
@@ -124,24 +124,21 @@
         async function initGame() {
             const { Map } = await google.maps.importLibrary("maps");
             
-            // 🛰️ Big Map - Satellite Vector Mode
+            // 📍 Big Map - Back to 3D Vector
             map = new Map(document.getElementById("map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
-                zoom: 18, 
-                tilt: 65, 
-                heading: currentHeading,
+                zoom: 18, tilt: 65, heading: 0,
                 mapId: CONFIG.MAP_ID,
-                mapTypeId: 'satellite', // Changes to Satellite
                 disableDefaultUI: true,
                 gestureHandling: "none"
             });
             
-            // 🗺️ Mini-Map - Hybrid Mode (Satellite + Labels)
+            // 🗺️ Mini-Map - Roadview for contrast & performance
             miniMap = new google.maps.Map(document.getElementById("mini-map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
                 zoom: 15,
                 disableDefaultUI: true,
-                mapTypeId: 'hybrid'
+                mapTypeId: 'roadmap'
             });
 
             setupThreeJS();
@@ -156,51 +153,49 @@
         }
 
         function gameLoop() {
-            if (fuel <= 0) {
-                document.getElementById('ui-panel').innerHTML = "<h2 style='color:red'>OUT OF FUEL</h2>";
-                return;
-            }
+            if (fuel <= 0) return;
 
             const planeIcon = document.getElementById('plane-icon');
             const turboAlert = document.getElementById('turbo-alert');
-            let moveMultiplier = 1.0;
-            let fuelDrain = 0.01;
+            let multiplier = keys['Space'] ? 2.5 : 1.0;
 
-            // 🏎️ Turbo Boost (Space)
             if (keys['Space']) {
-                moveMultiplier = 2.5;
-                fuelDrain = 0.04;
                 planeIcon.classList.add('turbo-active');
                 turboAlert.style.display = 'block';
+                fuel -= 0.04;
             } else {
                 planeIcon.classList.remove('turbo-active');
                 turboAlert.style.display = 'none';
             }
 
-            const speed = 0.00009 * moveMultiplier;
+            const moveStep = 0.00008 * multiplier;
 
-            // 🔄 Steering
-            if (keys['KeyA']) currentHeading -= 2.0;
-            if (keys['KeyD']) currentHeading += 2.0;
+            // Steering
+            if (keys['KeyA']) currentHeading -= 1.8;
+            if (keys['KeyD']) currentHeading += 1.8;
 
-            // 🚀 Propulsion
+            // Forward/Backward
             if (keys['KeyW']) {
-                playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * speed;
-                playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * speed;
-                fuel -= fuelDrain;
+                playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * moveStep;
+                playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * moveStep;
+                fuel -= 0.01;
             }
             if (keys['KeyS']) {
-                playerPos.lat -= Math.cos(currentHeading * Math.PI / 180) * (speed * 0.5);
-                playerPos.lng -= Math.sin(currentHeading * Math.PI / 180) * (speed * 0.5);
-                fuel -= (fuelDrain * 0.5);
+                playerPos.lat -= Math.cos(currentHeading * Math.PI / 180) * (moveStep * 0.5);
+                playerPos.lng -= Math.sin(currentHeading * Math.PI / 180) * (moveStep * 0.5);
+                fuel -= 0.005;
             }
 
-            // 📍 Update Cameras
+            // 🔄 CRITICAL: Update Both Maps
             map.moveCamera({
                 center: { lat: playerPos.lat, lng: playerPos.lng },
                 heading: currentHeading
             });
-            miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+
+            // If miniMap exists, update its center
+            if (miniMap) {
+                miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+            }
 
             document.getElementById('fuel-display').innerText = Math.floor(fuel);
             requestAnimationFrame(gameLoop);
