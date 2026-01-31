@@ -60,21 +60,37 @@
             to { box-shadow: 0 0 25px #cf142b, 0 0 45px #fff; }
         }
 
-        /* ✈️ Original Plane Position for 3D View */
-        #plane-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-100; pointer-events: none; }
-        #plane-img { width: 140px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4)); }
+        /* ✈️ FIXED PLANE IMAGE CSS */
+        #plane-container { 
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%); 
+            z-index: 2000; /* Increased to ensure it's above the map */
+            pointer-events: none; 
+            width: 150px; 
+            height: 150px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #plane-img { 
+            width: 140px; 
+            height: auto;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6)); 
+        }
         
-        #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 250px; text-transform: uppercase; }
+        #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 2500; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 250px; text-transform: uppercase; }
 
         #mini-map-wrapper {
             position: absolute; bottom: 30px; right: 30px; width: 200px; height: 200px;
-            border: 2px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
+            border: 2px solid #00ff00; border-radius: 50%; z-index: 2500; overflow: hidden;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         #mini-map { width: 100%; height: 100%; }
         #mini-plane-icon {
             position: absolute; top: 50%; left: 50%; width: 30px; height: 30px;
-            margin-top: -15px; margin-left: -15px; z-index: 1001; pointer-events: none;
+            margin-top: -15px; margin-left: -15px; z-index: 2501; pointer-events: none;
             filter: drop-shadow(0 0 5px #00ff00);
         }
 
@@ -104,7 +120,9 @@
         <button onclick="location.reload()" style="background:#00ff00; border: none; color: #000; padding: 12px 25px; cursor: pointer; margin-top: 25px; font-weight: bold; border-radius: 5px;">FLY AGAIN</button>
     </div>
 
-    <div id="plane-container"><img id="plane-img" src="Plane_icon_nose_up.png"></div>
+    <div id="plane-container">
+        <img id="plane-img" src="Plane_icon_nose_up.png" alt="A380 Plane">
+    </div>
 
     <div id="mini-map-wrapper">
         <div id="mini-map"></div>
@@ -156,7 +174,6 @@
         }
 
         function initGame() {
-            // ORIGINAL 3D CAMERA SETTINGS: Tilt 65, Zoom 18
             map = new google.maps.Map(document.getElementById("map"), {
                 center: playerPos, zoom: 18, tilt: 65, heading: 0,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
@@ -177,7 +194,6 @@
             const btnText = isSatellite ? 'VIEW: GOOGLE EARTH' : 'VIEW: VECTOR 3D';
             map.setMapTypeId(newMode);
             document.getElementById('mode-toggle-btn').innerText = btnText;
-            // Ensure tilt is reapplied when toggling modes
             map.setTilt(65);
         }
 
