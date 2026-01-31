@@ -13,14 +13,12 @@
             z-index: 3000; text-align: center; transition: opacity 0.8s ease;
         }
         
-        /* ☀️ Sunny Sky Background */
         #splash-screen {
             background: linear-gradient(180deg, #4da6ff 0%, #ffffff 100%);
         }
         
         #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #001122 0%, #000 100%); color: #00ff00; }
         
-        /* 🇬🇧 Blue Title with White Bold Outline */
         .uk-title {
             font-size: 4em; margin-bottom: 5px; font-weight: 900;
             color: #00247d; 
@@ -30,7 +28,6 @@
             letter-spacing: 2px;
         }
 
-        /* Green Countdown & Systems Text */
         #countdown { 
             font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; 
             width: 100px; height: 100px; display: flex; align-items: center; 
@@ -43,7 +40,6 @@
             color: #00ff00; text-shadow: 1px 1px 3px #000;
         }
         
-        /* 🔘 Animated Ignition Button */
         #ignition-btn {
             display: none; padding: 20px 45px; font-size: 1.6em; background: #cf142b; color: #fff;
             border: 4px solid #fff; cursor: pointer; font-family: inherit; font-weight: bold;
@@ -61,12 +57,10 @@
             to { box-shadow: 0 0 25px #cf142b, 0 0 45px #fff; }
         }
 
-        /* ✈️ Plane & HUD */
-        #plane-container { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
+        #plane-container { position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
         #plane-img { width: 140px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4)); }
         #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 250px; text-transform: uppercase; }
 
-        /* 📍 Mini-map Wrapper */
         #mini-map-wrapper {
             position: absolute; bottom: 30px; right: 30px; width: 200px; height: 200px;
             border: 2px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
@@ -157,11 +151,11 @@
         }
 
         function initGame() {
-            // Updated Camera for Wide Horizon View
-            // Zoom lowered to 16 for a much wider perspective
-            // Tilt set to 25 to show more sky/horizon and avoid building collision
+            // 🚀 3D HORIZON MODE
+            // Zoom: 15.5 for a wide, cinematic view
+            // Tilt: 65 (Maximum 3D immersion looking toward the horizon)
             map = new google.maps.Map(document.getElementById("map"), {
-                center: playerPos, zoom: 16, tilt: 25, heading: 0,
+                center: playerPos, zoom: 15.5, tilt: 65, heading: 0,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
             
