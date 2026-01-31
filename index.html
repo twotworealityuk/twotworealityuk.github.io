@@ -11,28 +11,28 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-size: cover; background-position: center;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            z-index: 3000; color: #00ff00; text-align: center;
-            transition: opacity 0.8s ease;
+            z-index: 3000; text-align: center; transition: opacity 0.8s ease;
         }
         
+        /* Sunny London Background */
         #splash-screen {
-            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1529655683826-aba9b3e77383?auto=format&fit=crop&w=1920&q=80');
+            background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1505761671935-60b3a742798e?auto=format&fit=crop&w=1920&q=80');
+            color: #fff;
         }
         
-        #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #001122 0%, #000 100%); }
+        #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #001122 0%, #000 100%); color: #00ff00; }
         
-        /* 🇬🇧 Union Jack Title with BOLD OUTLINE */
+        /* 🇬🇧 Blue Title with White Bold Outline */
         .uk-title {
-            font-size: 3.8em; margin-bottom: 5px; font-weight: 900;
-            background: linear-gradient(90deg, #cf142b 0%, #cf142b 10%, #fff 10%, #fff 15%, #00247d 15%, #00247d 85%, #fff 85%, #fff 90%, #cf142b 90%);
-            -webkit-background-clip: text; 
-            -webkit-text-fill-color: transparent;
-            /* Bold Outline Implementation */
-            -webkit-text-stroke: 2px #ffffff;
-            filter: drop-shadow(0 0 15px rgba(0,0,0,0.9));
+            font-size: 4em; margin-bottom: 5px; font-weight: 900;
+            color: #00247d; /* Classic British Blue */
+            -webkit-text-stroke: 2px #ffffff; /* Bold White Outline */
+            text-transform: uppercase;
+            filter: drop-shadow(0 0 20px rgba(207, 20, 43, 0.8)); /* Red Glow for UK Theme */
+            letter-spacing: 2px;
         }
 
-        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 20px auto; }
+        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 20px auto; background: rgba(0,0,0,0.3); }
         
         /* 🔘 Animated Ignition Button */
         #ignition-btn {
@@ -43,9 +43,8 @@
         }
 
         @keyframes pulse {
-            0% { transform: scale(1); }
+            0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
-            100% { transform: scale(1); }
         }
 
         @keyframes glow {
@@ -56,12 +55,7 @@
         /* ✈️ Plane & HUD */
         #plane-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
         #plane-img { width: 150px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6)); }
-        
-        #ui-panel { 
-            position: absolute; top: 20px; left: 20px; z-index: 1000; 
-            background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; 
-            border: 1px solid #00ff00; width: 250px; text-transform: uppercase;
-        }
+        #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 250px; text-transform: uppercase; }
 
         /* 📍 Mini-map Wrapper */
         #mini-map-wrapper {
@@ -76,19 +70,18 @@
             filter: drop-shadow(0 0 5px #00ff00);
         }
 
-        /* 🔗 Links */
-        .contact-info { margin-top: 25px; font-size: 0.9em; line-height: 1.8; }
+        .contact-info { margin-top: 25px; font-size: 0.9em; line-height: 1.8; color: #00ff00; }
         .contact-info a { color: #00ccff; text-decoration: none; }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
-        <h1 class="uk-title">AEROVIEW: LONDON</h1>
-        <h2 style="color: #fff; letter-spacing: 5px;">BY KEN LAM</h2>
+        <h1 class="uk-title">AeroView: London</h1>
+        <h2 style="color: #fff; letter-spacing: 5px; text-shadow: 2px 2px 4px #000;">BY KEN LAM</h2>
         <div id="countdown-wrap"><div id="countdown">5</div></div>
         <button id="ignition-btn" onclick="igniteEngines()">START YOUR ENGINES</button>
-        <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px;">PRE-FLIGHT SYSTEMS CHECK...</p>
+        <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px; font-weight: bold; text-shadow: 1px 1px 2px #000;">PRE-FLIGHT SYSTEMS CHECK...</p>
     </div>
 
     <div id="game-over">
@@ -173,7 +166,6 @@
             isSatellite = !isSatellite;
             const newMode = isSatellite ? 'satellite' : 'roadmap';
             const btnText = isSatellite ? 'VIEW: GOOGLE EARTH' : 'VIEW: VECTOR 3D';
-            
             map.setMapTypeId(newMode);
             document.getElementById('mode-toggle-btn').innerText = btnText;
         }
