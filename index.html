@@ -60,13 +60,12 @@
             to { box-shadow: 0 0 25px #cf142b, 0 0 45px #fff; }
         }
 
-        /* ✈️ FIXED PLANE IMAGE CSS */
         #plane-container { 
             position: absolute; 
             top: 50%; 
             left: 50%; 
             transform: translate(-50%, -50%); 
-            z-index: 2000; /* Increased to ensure it's above the map */
+            z-index: 2000; 
             pointer-events: none; 
             width: 150px; 
             height: 150px;
@@ -141,9 +140,19 @@
     <div id="map"></div>
 
     <script>
-        let CONFIG = { KEY: "AIzaSyCA8jtTwPhL1I09ZDVKZdlhL9ksTJFBCZE", MAP_ID: "b90ea2dd1a5427b4880e8762", START_POS: { lat: 51.5033, lng: -0.1195 } };
+        // Adjusted START_POS to be over the River Thames near Tower Bridge
+        let CONFIG = { 
+            KEY: "AIzaSyCA8jtTwPhL1I09ZDVKZdlhL9ksTJFBCZE", 
+            MAP_ID: "b90ea2dd1a5427b4880e8762", 
+            START_POS: { lat: 51.5060, lng: -0.0760 } 
+        };
+        
         let map, miniMap, isSatellite = false, gameRunning = false;
-        let playerPos = { ...CONFIG.START_POS }, currentHeading = 0, fuel = 100;
+        let playerPos = { ...CONFIG.START_POS };
+        
+        // currentHeading set to 255 to align with the river's flow toward the West
+        let currentHeading = 255; 
+        let fuel = 100;
         
         const SCALE_FACTOR = 0.000005;
         let currentSpeed = 1 * SCALE_FACTOR; 
@@ -175,8 +184,13 @@
 
         function initGame() {
             map = new google.maps.Map(document.getElementById("map"), {
-                center: playerPos, zoom: 18, tilt: 65, heading: 0,
-                mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
+                center: playerPos, 
+                zoom: 18, 
+                tilt: 65, 
+                heading: currentHeading,
+                mapId: CONFIG.MAP_ID, 
+                disableDefaultUI: true, 
+                gestureHandling: "none"
             });
             
             miniMap = new google.maps.Map(document.getElementById("mini-map"), {
