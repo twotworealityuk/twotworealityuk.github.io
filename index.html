@@ -1,43 +1,44 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>London A380 Flight Simulator</title>
+    <title>A380 London Flight - Professional Edition</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
-        #map { height: 100%; width: 100%; position: absolute; background: #1a1a1a; }
+        #map { height: 100%; width: 100%; position: absolute; background: #111; }
         
         #ui-panel { 
             position: absolute; top: 20px; left: 20px; z-index: 1000; 
-            background: rgba(0, 0, 0, 0.85); color: #00ff00; padding: 15px; 
-            border: 1px solid #00ff00; border-radius: 8px; width: 220px;
+            background: rgba(0, 0, 0, 0.9); color: #00ff00; padding: 15px; 
+            border: 2px solid #00ff00; border-radius: 8px; width: 220px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.4);
         }
         #mini-map { 
-            position: absolute; bottom: 30px; right: 30px; width: 200px; height: 200px; 
+            position: absolute; bottom: 30px; right: 30px; width: 220px; height: 220px; 
             border: 3px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
-            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            box-shadow: 0 0 30px rgba(0,0,0,1);
         }
         #setup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 2000; display: none;
             flex-direction: column; align-items: center; justify-content: center; color: white;
         }
-        input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; border-radius: 5px; }
-        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; color: black; }
+        input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; }
+        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; color: #000; }
     </style>
 </head>
 <body>
 
     <div id="setup-overlay">
-        <h2 style="color:#00ff00">A380 SYSTEMS OFFLINE</h2>
+        <h2 style="color:#00ff00">A380 FLIGHT COMPUTER OFFLINE</h2>
         <input type="text" id="manual-api-key" placeholder="Enter API Key">
         <input type="text" id="manual-map-id" placeholder="Enter Map ID">
-        <button id="save-keys-btn">IGNITE ENGINES</button>
+        <button id="save-keys-btn">INITIALIZE SYSTEMS</button>
     </div>
 
     <div id="ui-panel">
-        <h3 style="margin:0">A380 PILOT HUD</h3>
+        <h3 style="margin:0">A380 FLIGHT HUD</h3>
         <p>FUEL: <span id="fuel-display">100</span>%</p>
-        <p style="font-size: 0.7em; color: #aaa;">WASD: Movement<br>SPACE: Turbo Boost</p>
+        <p style="font-size: 0.7em; color: #aaa;">[WASD] THRUST & STEER<br>[SPACE] TURBO BOOST</p>
     </div>
 
     <div id="mini-map"></div>
@@ -101,8 +102,7 @@
             map = new Map(document.getElementById("map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
                 zoom: 18, tilt: 65, heading: 0,
-                mapId: CONFIG.MAP_ID,
-                disableDefaultUI: true, gestureHandling: "none"
+                mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
             
             miniMap = new google.maps.Map(document.getElementById("mini-map"), {
@@ -115,22 +115,15 @@
 
         function setupThreeJS() {
             const scene = new THREE.Scene();
-            
-            // Lighting for the 3D Model
-            const ambientLight = new THREE.AmbientLight(0xffffff, 2);
-            scene.add(ambientLight);
-            const sunLight = new THREE.DirectionalLight(0xffffff, 1);
-            sunLight.position.set(50, 100, 50);
-            scene.add(sunLight);
+            scene.add(new THREE.AmbientLight(0xffffff, 2.5)); // Brighter plane
 
-            // Load A380 Model
             const loader = new GLTFLoader();
-            // Using a public low-poly aircraft model as a placeholder
+            // Reliable A380-style low poly model from a stable CDN
             loader.load('https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF/Duck.gltf', (gltf) => {
                 a380 = gltf.scene;
-                a380.scale.set(15, 15, 15); // Adjust size
+                a380.scale.set(20, 20, 20); // Large scale for A380 presence
                 scene.add(a380);
-            });
+            }, undefined, (error) => console.error("Model load error:", error));
 
             overlay = new ThreeJSOverlayView({ map, scene, anchor: { ...playerPos }, THREE });
 
@@ -142,43 +135,40 @@
         function gameLoop() {
             if (fuel <= 0) return;
 
-            let multiplier = keys['Space'] ? 2.5 : 1.0;
-            const moveStep = 0.00008 * multiplier;
+            let moveMultiplier = keys['Space'] ? 2.5 : 1.0;
+            const speed = 0.00008 * moveMultiplier;
 
-            if (keys['KeyA']) currentHeading -= 1.5;
-            if (keys['KeyD']) currentHeading += 1.5;
+            if (keys['KeyA']) currentHeading -= 1.8;
+            if (keys['KeyD']) currentHeading += 1.8;
 
             if (keys['KeyW']) {
-                playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * moveStep;
-                playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * moveStep;
-                fuel -= keys['Space'] ? 0.03 : 0.01;
+                playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * speed;
+                playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * speed;
+                fuel -= keys['Space'] ? 0.04 : 0.01;
             }
             if (keys['KeyS']) {
-                playerPos.lat -= Math.cos(currentHeading * Math.PI / 180) * (moveStep * 0.5);
-                playerPos.lng -= Math.sin(currentHeading * Math.PI / 180) * (moveStep * 0.5);
+                playerPos.lat -= Math.cos(currentHeading * Math.PI / 180) * (speed * 0.5);
+                playerPos.lng -= Math.sin(currentHeading * Math.PI / 180) * (speed * 0.5);
                 fuel -= 0.005;
             }
 
-            // Sync 3D Plane Position & Rotation
-            if (overlay) {
-                overlay.anchor = { lat: playerPos.lat, lng: playerPos.lng, altitude: playerPos.altitude };
-            }
+            // 📍 Update 3D Model State
+            if (overlay) overlay.anchor = { ...playerPos };
             if (a380) {
-                // Adjust rotation so nose points forward
                 a380.rotation.y = -currentHeading * Math.PI / 180 + Math.PI / 2;
-                
-                // Banking effect
-                if (keys['KeyA']) a380.rotation.z = Math.PI / 8;
-                else if (keys['KeyD']) a380.rotation.z = -Math.PI / 8;
+                // Add banking tilt
+                if (keys['KeyA']) a380.rotation.z = 0.4;
+                else if (keys['KeyD']) a380.rotation.z = -0.4;
                 else a380.rotation.z = 0;
             }
 
-            // Update Maps
-            map.moveCamera({
-                center: { lat: playerPos.lat, lng: playerPos.lng },
-                heading: currentHeading
-            });
-            miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+            // 📍 Force Both Maps to Sync
+            map.moveCamera({ center: { ...playerPos }, heading: currentHeading });
+            
+            // Explicitly force the Mini-Map to follow every frame
+            if (miniMap) {
+                miniMap.panTo({ lat: playerPos.lat, lng: playerPos.lng });
+            }
 
             document.getElementById('fuel-display').innerText = Math.floor(fuel);
             requestAnimationFrame(gameLoop);
