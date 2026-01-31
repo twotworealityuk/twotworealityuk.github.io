@@ -16,7 +16,6 @@
         /* ☀️ Generated Sunny Sky Background */
         #splash-screen {
             background: linear-gradient(180deg, #4da6ff 0%, #ffffff 100%);
-            color: #fff;
         }
         
         #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #001122 0%, #000 100%); color: #00ff00; }
@@ -31,7 +30,13 @@
             letter-spacing: 2px;
         }
 
-        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 20px auto; background: rgba(0,0,0,0.1); color: #00247d; }
+        /* Green Countdown */
+        #countdown { 
+            font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; 
+            width: 100px; height: 100px; display: flex; align-items: center; 
+            justify-content: center; margin: 20px auto; 
+            background: rgba(0,0,0,0.6); color: #00ff00; 
+        }
         
         /* 🔘 Animated Ignition Button */
         #ignition-btn {
@@ -80,7 +85,7 @@
         <h2 style="color: #00247d; letter-spacing: 5px;">BY KEN LAM</h2>
         <div id="countdown-wrap"><div id="countdown">5</div></div>
         <button id="ignition-btn" onclick="igniteEngines()">START YOUR ENGINES</button>
-        <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px; font-weight: bold; color: #00247d;">PRE-FLIGHT SYSTEMS CHECK...</p>
+        <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px; font-weight: bold; color: #00ff00; text-shadow: 1px 1px 3px #000;">PRE-FLIGHT SYSTEMS CHECK...</p>
     </div>
 
     <div id="game-over">
@@ -147,9 +152,9 @@
         }
 
         function initGame() {
-            // Altitude Fix: Adjusting Zoom to 19 and Tilt to 45 for a safer overhead clearance
+            // Camera Adjustment: Reduced zoom to 17.5 and decreased tilt to 35 to see more horizon/location
             map = new google.maps.Map(document.getElementById("map"), {
-                center: playerPos, zoom: 19, tilt: 45, heading: 0,
+                center: playerPos, zoom: 17.5, tilt: 35, heading: 0,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
             
@@ -188,7 +193,6 @@
             document.getElementById('fuel-display').innerText = Math.max(0, Math.floor(fuel));
             document.getElementById('speed-display').innerText = Math.floor(currentSpeed / SCALE_FACTOR);
 
-            // Using moveCamera with heading only to keep the high-altitude zoom stable
             map.moveCamera({ center: playerPos, heading: currentHeading });
             miniMap.setCenter(playerPos);
             document.getElementById('mini-plane-icon').style.transform = `rotate(${currentHeading}deg)`;
