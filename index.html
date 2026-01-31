@@ -9,14 +9,13 @@
         /* 🎬 Screens */
         #splash-screen, #game-over {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-size: cover; background-position: center;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 3000; text-align: center; transition: opacity 0.8s ease;
         }
         
-        /* Sunny London Background */
+        /* ☀️ Generated Sunny Sky Background */
         #splash-screen {
-            background-image: linear-gradient(rgba(0,0,0,0.2), rgba(0,0,0,0.4)), url('https://images.unsplash.com/photo-1505761671935-60b3a742798e?auto=format&fit=crop&w=1920&q=80');
+            background: linear-gradient(180deg, #4da6ff 0%, #ffffff 100%);
             color: #fff;
         }
         
@@ -25,14 +24,14 @@
         /* 🇬🇧 Blue Title with White Bold Outline */
         .uk-title {
             font-size: 4em; margin-bottom: 5px; font-weight: 900;
-            color: #00247d; /* Classic British Blue */
-            -webkit-text-stroke: 2px #ffffff; /* Bold White Outline */
+            color: #00247d; 
+            -webkit-text-stroke: 2px #ffffff;
             text-transform: uppercase;
-            filter: drop-shadow(0 0 20px rgba(207, 20, 43, 0.8)); /* Red Glow for UK Theme */
+            filter: drop-shadow(0 0 20px rgba(207, 20, 43, 0.6));
             letter-spacing: 2px;
         }
 
-        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 20px auto; background: rgba(0,0,0,0.3); }
+        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 20px auto; background: rgba(0,0,0,0.1); color: #00247d; }
         
         /* 🔘 Animated Ignition Button */
         #ignition-btn {
@@ -54,7 +53,7 @@
 
         /* ✈️ Plane & HUD */
         #plane-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
-        #plane-img { width: 150px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6)); }
+        #plane-img { width: 150px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4)); }
         #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 250px; text-transform: uppercase; }
 
         /* 📍 Mini-map Wrapper */
@@ -78,10 +77,10 @@
 
     <div id="splash-screen">
         <h1 class="uk-title">AeroView: London</h1>
-        <h2 style="color: #fff; letter-spacing: 5px; text-shadow: 2px 2px 4px #000;">BY KEN LAM</h2>
+        <h2 style="color: #00247d; letter-spacing: 5px;">BY KEN LAM</h2>
         <div id="countdown-wrap"><div id="countdown">5</div></div>
         <button id="ignition-btn" onclick="igniteEngines()">START YOUR ENGINES</button>
-        <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px; font-weight: bold; text-shadow: 1px 1px 2px #000;">PRE-FLIGHT SYSTEMS CHECK...</p>
+        <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px; font-weight: bold; color: #00247d;">PRE-FLIGHT SYSTEMS CHECK...</p>
     </div>
 
     <div id="game-over">
@@ -148,8 +147,9 @@
         }
 
         function initGame() {
+            // Altitude Fix: Adjusting Zoom to 19 and Tilt to 45 for a safer overhead clearance
             map = new google.maps.Map(document.getElementById("map"), {
-                center: playerPos, zoom: 18, tilt: 65, heading: 0,
+                center: playerPos, zoom: 19, tilt: 45, heading: 0,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
             
@@ -188,6 +188,7 @@
             document.getElementById('fuel-display').innerText = Math.max(0, Math.floor(fuel));
             document.getElementById('speed-display').innerText = Math.floor(currentSpeed / SCALE_FACTOR);
 
+            // Using moveCamera with heading only to keep the high-altitude zoom stable
             map.moveCamera({ center: playerPos, heading: currentHeading });
             miniMap.setCenter(playerPos);
             document.getElementById('mini-plane-icon').style.transform = `rotate(${currentHeading}deg)`;
