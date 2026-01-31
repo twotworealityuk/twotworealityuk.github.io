@@ -1,4 +1,4 @@
-name: Deploy London 3D Browser-based Game
+name: Deploy London Game
 on:
   push:
     branches: [ main ]
@@ -10,13 +10,20 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      # This step ensures the secrets actually exist before trying to use them
+      - name: Verify Secrets
+        run: |
+          if [ -z "${{ secrets.MAPS_API_KEY }}" ]; then echo "SECRET MAPS_API_KEY IS MISSING"; exit 1; fi
+          if [ -z "${{ secrets.MAPS_ID }}" ]; then echo "SECRET MAPS_ID IS MISSING"; exit 1; fi
+
       - name: Inject API Keys
         run: |
-          sed -i "s/YOUR_API_KEY_HERE/${{ secrets.MAPS_API_KEY }}/g" index.html
-          sed -i "s/YOUR_MAP_ID_HERE/${{ secrets.MAPS_ID }}/g" index.html
+          # We use | as a delimiter in sed to avoid issues with special characters in keys
+          sed -i "s|YOUR_API_KEY_HERE|${{ secrets.MAPS_API_KEY }}|g" index.html
+          sed -i "s|YOUR_MAP_ID_HERE|${{ secrets.MAPS_ID }}|g" index.html
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
         with:
-          folder: . # The folder your index.html is in
-          branch: gh-pages # The branch the game will live on
+          folder: .
+          branch: gh-pages
