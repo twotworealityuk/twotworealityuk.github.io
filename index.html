@@ -1,98 +1,190 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>A380 Free Explorer (Leaflet)</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <title>A380 London - Google Edition</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
-        #map { height: 100%; width: 100%; position: absolute; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
+        #map { height: 100%; width: 100%; position: absolute; background: #111; }
         
-        /* ✈️ Your Local A380 Image */
+        /* ✈️ Main Plane HUD */
         #plane-container {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 1000; pointer-events: none;
+            z-index: 500; pointer-events: none;
         }
         #plane-img {
-            width: 120px;
-            filter: drop-shadow(0 0 10px rgba(0, 255, 0, 0.7));
-            transition: transform 0.1s;
+            width: 140px;
+            filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6));
+            transition: transform 0.1s ease;
+        }
+
+        /* 📍 Mini-map Container & Rotating Icon */
+        #mini-map-wrapper {
+            position: absolute; bottom: 30px; right: 30px; width: 200px; height: 200px;
+            border: 3px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        #mini-map { width: 100%; height: 100%; }
+        #mini-plane-icon {
+            position: absolute; top: 50%; left: 50%;
+            width: 30px; height: 30px;
+            margin-top: -15px; margin-left: -15px;
+            z-index: 1001; pointer-events: none;
+            filter: drop-shadow(0 0 5px #00ff00);
         }
 
         #ui-panel { 
-            position: absolute; top: 10px; left: 10px; z-index: 2000; 
-            background: rgba(0,0,0,0.8); color: #00ff00; padding: 15px; border-radius: 5px; border: 1px solid #00ff00;
+            position: absolute; top: 20px; left: 20px; z-index: 1000; 
+            background: rgba(0, 0, 0, 0.85); color: #00ff00; padding: 15px; 
+            border: 2px solid #00ff00; border-radius: 8px;
         }
-        #mini-map { 
-            position: absolute; bottom: 20px; right: 20px; width: 150px; height: 150px; 
-            border: 2px solid #00ff00; border-radius: 50%; z-index: 2000; overflow: hidden;
+        #setup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 2000; display: none;
+            flex-direction: column; align-items: center; justify-content: center; color: white;
         }
+        input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; }
+        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; }
+
         .bank-left { transform: rotate(-15deg); }
         .bank-right { transform: rotate(15deg); }
     </style>
 </head>
 <body>
 
-    <div id="ui-panel">
-        <h3 style="margin:0">FREE PILOT HUD</h3>
-        <p>COORDS: <span id="coords">Calculating...</span></p>
-        <p style="font-size: 10px;">WASD to Move | SPACE for Turbo</p>
+    <div id="setup-overlay">
+        <h2 style="color:#00ff00">SYSTEM OFFLINE</h2>
+        <input type="text" id="manual-api-key" placeholder="Enter API Key">
+        <input type="text" id="manual-map-id" placeholder="Enter Map ID">
+        <button id="save-keys-btn">IGNITE ENGINES</button>
     </div>
 
-    <div id="mini-map"></div>
+    <div id="plane-container">
+        <img id="plane-img" src="Plane_icon_nose_up.png" alt="A380">
+    </div>
+
+    <div id="mini-map-wrapper">
+        <div id="mini-map"></div>
+        <img id="mini-plane-icon" src="Plane_icon_nose_up.png">
+    </div>
+
+    <div id="ui-panel">
+        <h3 style="margin:0">A380 PILOT</h3>
+        <p>FUEL: <span id="fuel-display">100</span>%</p>
+    </div>
+
     <div id="map"></div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        // 📍 London Center
-        let pos = [51.505, -0.09]; 
-        let heading = 0;
+        let CONFIG = {
+            KEY: "AIzaSyCA8jtTwPhL1I09ZDVKZdlhL9ksTJFBCZE",
+            MAP_ID: "b90ea2dd1a5427b4880e8762",
+            START_POS: { lat: 51.5033, lng: -0.1195 }
+        };
+
+        let map, miniMap;
+        let playerPos = { ...CONFIG.START_POS };
+        let currentHeading = 0;
+        let fuel = 100;
         const keys = {};
 
-        // 🗺️ Main Map Setup (OpenStreetMap - FREE)
-        const map = L.map('map', { zoomControl: false, attributionControl: false }).setView(pos, 16);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+        function checkKeys() {
+            const storedKey = localStorage.getItem('gmaps_api_key');
+            const storedId = localStorage.getItem('gmaps_map_id');
+            if (CONFIG.KEY === "" || CONFIG.KEY === "AIzaSyCA8jtTwPhL1I09ZDVKZdlhL9ksTJFBCZE") {
+                if (storedKey) { CONFIG.KEY = storedKey; CONFIG.MAP_ID = storedId; loadGoogleMaps(); }
+                else { document.getElementById('setup-overlay').style.display = 'flex'; }
+            } else { loadGoogleMaps(); }
+        }
 
-        // 🗺️ Mini-Map Setup
-        const miniMap = L.map('mini-map', { zoomControl: false, attributionControl: false, dragging: false }).setView(pos, 13);
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(miniMap);
-
-        window.addEventListener('keydown', e => keys[e.code] = true);
-        window.addEventListener('keyup', e => keys[e.code] = false);
-
-        function gameLoop() {
-            const planeImg = document.getElementById('plane-img');
-            let multiplier = keys['Space'] ? 3 : 1;
-            let speed = 0.0001 * multiplier;
-
-            if (keys['KeyA']) { heading -= 2; planeImg.className = 'bank-left'; }
-            else if (keys['KeyD']) { heading += 2; planeImg.className = 'bank-right'; }
-            else { planeImg.className = ''; }
-
-            if (keys['KeyW']) {
-                pos[0] += Math.cos(heading * Math.PI / 180) * speed;
-                pos[1] += Math.sin(heading * Math.PI / 180) * speed;
+        document.getElementById('save-keys-btn').onclick = () => {
+            const k = document.getElementById('manual-api-key').value.trim();
+            const id = document.getElementById('manual-map-id').value.trim();
+            if (k && id) {
+                localStorage.setItem('gmaps_api_key', k);
+                localStorage.setItem('gmaps_map_id', id);
+                location.reload();
             }
-            if (keys['KeyS']) {
-                pos[0] -= Math.cos(heading * Math.PI / 180) * (speed / 2);
-                pos[1] -= Math.sin(heading * Math.PI / 180) * (speed / 2);
-            }
+        };
 
-            // Sync Main Map
-            map.setView(pos, 16, { animate: false });
-            // Sync Mini-Map (Follows Plane)
-            miniMap.setView(pos, 13, { animate: false });
+        function loadGoogleMaps() {
+            const script = document.createElement("script");
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.KEY}&v=beta&libraries=maps&callback=initGame`;
+            script.async = true;
+            document.head.appendChild(script);
+        }
 
-            document.getElementById('coords').innerText = pos[0].toFixed(4) + ", " + pos[1].toFixed(4);
+        function initGame() {
+            map = new google.maps.Map(document.getElementById("map"), {
+                center: playerPos,
+                zoom: 18, tilt: 65, heading: 0,
+                mapId: CONFIG.MAP_ID,
+                disableDefaultUI: true, gestureHandling: "none"
+            });
+
+            miniMap = new google.maps.Map(document.getElementById("mini-map"), {
+                center: playerPos,
+                zoom: 14,
+                disableDefaultUI: true,
+                mapTypeId: 'roadmap'
+            });
+
+            window.addEventListener('keydown', e => keys[e.code] = true);
+            window.addEventListener('keyup', e => keys[e.code] = false);
+            
             requestAnimationFrame(gameLoop);
         }
 
-        requestAnimationFrame(gameLoop);
+        function gameLoop() {
+            if (fuel <= 0) return;
+
+            const mainPlane = document.getElementById('plane-img');
+            const miniPlane = document.getElementById('mini-plane-icon');
+            let multiplier = keys['Space'] ? 2.5 : 1.0;
+            const moveStep = 0.00008 * multiplier;
+
+            // Rotation
+            if (keys['KeyA']) { 
+                currentHeading -= 1.5; 
+                mainPlane.className = 'bank-left';
+            } else if (keys['KeyD']) { 
+                currentHeading += 1.5; 
+                mainPlane.className = 'bank-right';
+            } else {
+                mainPlane.className = '';
+            }
+
+            // Apply rotation to mini-map icon
+            miniPlane.style.transform = `rotate(${currentHeading}deg)`;
+
+            // Movement
+            let moved = false;
+            if (keys['KeyW']) {
+                playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * moveStep;
+                playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * moveStep;
+                fuel -= (keys['Space'] ? 0.04 : 0.01);
+                moved = true;
+            }
+            if (keys['KeyS']) {
+                playerPos.lat -= Math.cos(currentHeading * Math.PI / 180) * (moveStep * 0.5);
+                playerPos.lng -= Math.sin(currentHeading * Math.PI / 180) * (moveStep * 0.5);
+                fuel -= 0.005;
+                moved = true;
+            }
+
+            // Camera Sync
+            map.moveCamera({ center: playerPos, heading: currentHeading });
+
+            // CRITICAL: Updated mini-map follow logic
+            if (moved || keys['KeyA'] || keys['KeyD']) {
+                miniMap.setCenter(playerPos);
+            }
+
+            document.getElementById('fuel-display').innerText = Math.floor(fuel);
+            requestAnimationFrame(gameLoop);
+        }
+
+        checkKeys();
     </script>
-
-    <div id="plane-container">
-        <img id="plane-img" src="Plane_icon_nose_up.png">
-    </div>
-
 </body>
 </html>
