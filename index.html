@@ -9,31 +9,34 @@
         /* 🎬 Screens */
         #splash-screen, #game-over {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #001a00 0%, #000 100%);
+            background: radial-gradient(circle, #000b1a 0%, #000 100%);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 3000; color: #00ff00; text-align: center;
         }
-        #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #002244 0%, #000 100%); }
+        #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #001122 0%, #000 100%); }
         
-        /* 🇬🇧 UK Flag Title Style */
+        /* 🇬🇧 Refined UK "Union Jack" Title Style */
         .uk-title {
             font-size: 3.5em; margin-bottom: 5px; font-weight: 900;
-            background: linear-gradient(to right, #cf142b 33%, #ffffff 33%, #ffffff 66%, #00247d 66%);
+            background: 
+                linear-gradient(90deg, #cf142b 10%, #fff 10%, #fff 15%, #00247d 15%, #00247d 45%, #fff 45%, #fff 50%, #cf142b 50%, #cf142b 55%, #fff 55%, #fff 60%, #00247d 60%, #00247d 85%, #fff 85%, #fff 90%, #cf142b 90%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 10px rgba(255,255,255,0.3));
+            filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.8));
         }
 
-        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 20px 0; }
+        #countdown-container { margin: 20px 0; }
+        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+        
+        #ignition-btn {
+            display: none; padding: 15px 40px; font-size: 1.5em; background: #cf142b; color: #fff;
+            border: 3px solid #fff; cursor: pointer; font-family: inherit; font-weight: bold;
+            box-shadow: 0 0 20px rgba(207, 20, 43, 0.6); margin-top: 20px;
+        }
 
         /* ✈️ Main Plane HUD */
         #plane-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
         #plane-img { width: 150px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6)); transition: transform 0.1s ease; }
-
-        /* 📍 Mini-map */
-        #mini-map-wrapper { position: absolute; bottom: 30px; right: 30px; width: 200px; height: 200px; border: 2px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden; }
-        #mini-map { width: 100%; height: 100%; }
-        #mini-plane-icon { position: absolute; top: 50%; left: 50%; width: 30px; height: 30px; margin-top: -15px; margin-left: -15px; z-index: 1001; pointer-events: none; }
 
         /* 📟 HUD Panel */
         #ui-panel { 
@@ -43,53 +46,37 @@
         }
         .key { color: #fff; font-weight: bold; background: #004400; padding: 1px 4px; border-radius: 3px; }
         #toggle-btn { margin-top: 15px; width: 100%; padding: 8px; background: #004400; color: #00ff00; border: 1px solid #00ff00; cursor: pointer; font-family: inherit; }
-
-        #setup-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 4000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
-        input { width: 300px; padding: 12px; background: #111; border: 1px solid #00ff00; color: white; margin: 10px; }
-        .bank-left { transform: rotate(-15deg); }
-        .bank-right { transform: rotate(15deg); }
     </style>
 </head>
 <body>
 
-    <div id="setup-overlay">
-        <h2 style="color:#00ff00">A380 COMMAND CENTER</h2>
-        <input type="text" id="manual-api-key" placeholder="Enter API Key">
-        <input type="text" id="manual-map-id" placeholder="Enter Map ID">
-        <button onclick="saveKeys()" style="padding:10px 20px; background:#00ff00; border:none; cursor:pointer;">SAVE CREDENTIALS</button>
-    </div>
-
     <div id="splash-screen">
         <h1 class="uk-title">AEROVIEW: LONDON</h1>
-        <h2 style="color: #fff; letter-spacing: 5px;">by Ken Lam</h2>
-        <div id="countdown">5</div>
-        <p style="letter-spacing: 2px;">PRE-FLIGHT SYSTEMS CHECK...</p>
+        <h2 style="color: #fff; letter-spacing: 5px; opacity: 0.8;">BY KEN LAM</h2>
+        <div id="countdown-container">
+            <div id="countdown">5</div>
+        </div>
+        <button id="ignition-btn" onclick="igniteEngines()">START YOUR ENGINES</button>
+        <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px;">PRE-FLIGHT SYSTEMS CHECK...</p>
     </div>
 
     <div id="game-over">
         <h1 style="font-size: 3em; color: #fff; text-shadow: 0 0 20px #00ccff;">Wonderful Flight!</h1>
         <p style="font-size: 1.2em;">You've successfully explored the skies of London.</p>
-        <h2 style="color: #00ff00; margin-top: 20px;">Thank you for flying with AeroView, Captain Ken Lam!</h2>
+        <h2 style="color: #00ff00; margin-top: 20px;">Thank you for flying with AeroView, Captain!</h2>
         <p style="color: #aaa; margin-top: 10px;">Safe travels until we meet again.</p>
         <button onclick="location.reload()" style="background:#00ff00; border: none; color: #000; padding: 12px 25px; cursor: pointer; margin-top: 30px; font-weight: bold; border-radius: 5px;">FLY AGAIN</button>
     </div>
 
-    <div id="plane-container">
-        <img id="plane-img" src="Plane_icon_nose_up.png" alt="A380">
-    </div>
-
-    <div id="mini-map-wrapper">
-        <div id="mini-map"></div>
-        <img id="mini-plane-icon" src="Plane_icon_nose_up.png">
-    </div>
+    <div id="plane-container"><img id="plane-img" src="Plane_icon_nose_up.png"></div>
 
     <div id="ui-panel">
         <div style="font-weight: bold; border-bottom: 1px solid #004400; padding-bottom: 5px; margin-bottom: 10px;">A380-SYSTEMS</div>
-        <div>SPEED: <span id="speed-display" style="color: #fff">5</span> KTS</div>
+        <div>SPEED: <span id="speed-display" style="color: #fff">1</span> KTS</div>
         <div>FUEL:  <span id="fuel-display" style="color: #fff">100</span>%</div>
         <button id="toggle-btn" onclick="toggleMapMode()">VIEW: VECTOR 3D</button>
         <div style="font-size: 0.7em; color: #00aa00; margin-top: 10px; border-top: 1px solid #004400; padding-top: 10px;">
-            <span class="key">W</span> ACCELERATE | <span class="key">S</span> DECELERATE<br>
+            <span class="key">W</span> ACCEL | <span class="key">S</span> DECEL<br>
             <span class="key">A</span> <span class="key">D</span> STEER (BANKING)
         </div>
     </div>
@@ -98,46 +85,36 @@
 
     <script>
         let CONFIG = { KEY: "YOUR_API_KEY_HERE", MAP_ID: "YOUR_MAP_ID_HERE", START_POS: { lat: 51.5033, lng: -0.1195 } };
-        let map, miniMap;
-        let playerPos = { ...CONFIG.START_POS };
-        let currentHeading = 0;
-        let fuel = 100;
-        let isSatellite = false;
+        let map, miniMap, isSatellite = false, gameRunning = false;
+        let playerPos = { ...CONFIG.START_POS }, currentHeading = 0, fuel = 100;
         
-        // 🛫 Updated Physics for 5 KTS start
-        const SCALE_FACTOR = 0.000005; // Adjusts internal coordinate speed to KTS display
-        let currentSpeed = 5 * SCALE_FACTOR; 
-        const MIN_SPEED = 2 * SCALE_FACTOR;
-        const MAX_SPEED = 50 * SCALE_FACTOR;
+        const SCALE_FACTOR = 0.000005;
+        let currentSpeed = 1 * SCALE_FACTOR; 
+        const MIN_SPEED = 1 * SCALE_FACTOR;
+        const MAX_SPEED = 20 * SCALE_FACTOR;
         const keys = {};
 
-        function checkKeys() {
-            const storedKey = localStorage.getItem('gmaps_api_key');
-            const storedId = localStorage.getItem('gmaps_map_id');
-            if (CONFIG.KEY === "" || CONFIG.KEY === "YOUR_API_KEY_HERE") {
-                if (storedKey) { CONFIG.KEY = storedKey; CONFIG.MAP_ID = storedId; startAppSequence(); }
-                else { document.getElementById('setup-overlay').style.display = 'flex'; }
-            } else { startAppSequence(); }
-        }
-
-        function saveKeys() {
-            const k = document.getElementById('manual-api-key').value.trim();
-            const id = document.getElementById('manual-map-id').value.trim();
-            if (k && id) { localStorage.setItem('gmaps_api_key', k); localStorage.setItem('gmaps_map_id', id); location.reload(); }
-        }
-
-        function startAppSequence() {
-            loadGoogleMaps();
+        function startCountdown() {
             let count = 5;
             const timer = setInterval(() => {
                 count--;
                 document.getElementById('countdown').innerText = count;
                 if (count <= 0) {
                     clearInterval(timer);
-                    document.getElementById('splash-screen').style.opacity = '0';
-                    setTimeout(() => { document.getElementById('splash-screen').style.display = 'none'; }, 1000);
+                    document.getElementById('countdown-container').style.display = 'none';
+                    document.getElementById('ignition-btn').style.display = 'block';
+                    document.getElementById('systems-text').innerText = "SYSTEMS READY FOR IGNITION";
                 }
             }, 1000);
+        }
+
+        function igniteEngines() {
+            const splash = document.getElementById('splash-screen');
+            splash.style.opacity = '0';
+            setTimeout(() => { 
+                splash.style.display = 'none';
+                gameRunning = true;
+            }, 800);
         }
 
         function loadGoogleMaps() {
@@ -152,9 +129,6 @@
                 center: playerPos, zoom: 18, tilt: 65, heading: 0,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
-            miniMap = new google.maps.Map(document.getElementById("mini-map"), {
-                center: playerPos, zoom: 14, disableDefaultUI: true
-            });
             window.addEventListener('keydown', e => { if(e.code !== 'Space') keys[e.code] = true; });
             window.addEventListener('keyup', e => keys[e.code] = false);
             requestAnimationFrame(gameLoop);
@@ -167,37 +141,39 @@
         }
 
         function gameLoop() {
-            if (fuel <= 0) {
-                document.getElementById('game-over').style.display = 'flex';
-                return;
-            }
+            if (!gameRunning) { requestAnimationFrame(gameLoop); return; }
+            if (fuel <= 0) { document.getElementById('game-over').style.display = 'flex'; return; }
 
-            // 🛫 Throttle
-            if (keys['KeyW']) currentSpeed = Math.min(currentSpeed + (0.05 * SCALE_FACTOR), MAX_SPEED);
-            if (keys['KeyS']) currentSpeed = Math.max(currentSpeed - (0.05 * SCALE_FACTOR), MIN_SPEED);
+            if (keys['KeyW']) currentSpeed = Math.min(currentSpeed + (0.02 * SCALE_FACTOR), MAX_SPEED);
+            if (keys['KeyS']) currentSpeed = Math.max(currentSpeed - (0.02 * SCALE_FACTOR), MIN_SPEED);
 
             const mainPlane = document.getElementById('plane-img');
-            if (keys['KeyA']) { currentHeading -= 1.5; mainPlane.className = 'bank-left'; }
-            else if (keys['KeyD']) { currentHeading += 1.5; mainPlane.className = 'bank-right'; }
+            if (keys['KeyA']) { currentHeading -= 1.2; mainPlane.className = 'bank-left'; }
+            else if (keys['KeyD']) { currentHeading += 1.2; mainPlane.className = 'bank-right'; }
             else { mainPlane.className = ''; }
 
             playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * currentSpeed;
             playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * currentSpeed;
             
-            // Fuel Logic
-            fuel -= (currentSpeed * 150);
+            fuel -= (currentSpeed * 250);
 
             document.getElementById('fuel-display').innerText = Math.max(0, Math.floor(fuel));
             document.getElementById('speed-display').innerText = Math.floor(currentSpeed / SCALE_FACTOR);
 
             map.moveCamera({ center: playerPos, heading: currentHeading });
-            miniMap.setCenter(playerPos);
-            document.getElementById('mini-plane-icon').style.transform = `rotate(${currentHeading}deg)`;
-
             requestAnimationFrame(gameLoop);
         }
 
-        checkKeys();
+        // Initialize script
+        const storedKey = localStorage.getItem('gmaps_api_key');
+        if (storedKey) { 
+            CONFIG.KEY = storedKey; 
+            CONFIG.MAP_ID = localStorage.getItem('gmaps_map_id'); 
+            loadGoogleMaps(); 
+            startCountdown();
+        } else {
+            // Re-trigger your setup-overlay here if needed
+        }
     </script>
 </body>
 </html>
