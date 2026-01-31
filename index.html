@@ -6,19 +6,22 @@
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
         #map { height: 100%; width: 100%; position: absolute; background: #111; }
         
-        /* ✈️ A380 2D HUD Overlay */
+        /* ✈️ A380 Local Image HUD */
         #plane-container {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
             z-index: 500; pointer-events: none;
         }
         #plane-img {
-            width: 120px; /* A380 is a big plane! */
-            filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.5));
+            width: 140px; /* Adjusted for A380 scale */
+            filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6));
             transition: transform 0.1s ease;
         }
 
-        /* HUD Styling */
+        /* Banking Animations */
+        .bank-left { transform: rotate(-15deg) scale(0.95); }
+        .bank-right { transform: rotate(15deg) scale(0.95); }
+
         #ui-panel { 
             position: absolute; top: 20px; left: 20px; z-index: 1000; 
             background: rgba(0, 0, 0, 0.85); color: #00ff00; padding: 15px; 
@@ -36,29 +39,25 @@
         }
         input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; }
         button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; color: black; }
-        
-        /* Banking Animations */
-        .bank-left { transform: rotate(-15deg) scale(0.95); }
-        .bank-right { transform: rotate(15deg) scale(0.95); }
     </style>
 </head>
 <body>
 
     <div id="setup-overlay">
-        <h2 style="color:#00ff00">A380 SYSTEMS OFFLINE</h2>
+        <h2 style="color:#00ff00">SYSTEM OFFLINE</h2>
         <input type="text" id="manual-api-key" placeholder="Enter API Key">
         <input type="text" id="manual-map-id" placeholder="Enter Map ID">
         <button id="save-keys-btn">IGNITE ENGINES</button>
     </div>
 
     <div id="plane-container">
-        <img id="plane-img" src="https://upload.wikimedia.org/wikipedia/commons/c/c5/Plane_icon_nose_up.png" alt="A380">
+        <img id="plane-img" src="Plane_icon_nose_up.png" alt="A380 Plane">
     </div>
 
     <div id="ui-panel">
         <h3 style="margin:0">A380 PILOT HUD</h3>
         <p>FUEL: <span id="fuel-display">100</span>%</p>
-        <p style="font-size: 0.7em; color: #aaa;">[WASD] TO FLY<br>[SPACE] TURBO</p>
+        <p style="font-size: 0.7em; color: #aaa;">[WASD] MOVE & STEER<br>[SPACE] TURBO</p>
     </div>
 
     <div id="mini-map"></div>
@@ -104,7 +103,6 @@
         }
 
         function initGame() {
-            // Main Map (Vector 3D)
             map = new google.maps.Map(document.getElementById("map"), {
                 center: playerPos,
                 zoom: 18,
@@ -115,7 +113,6 @@
                 gestureHandling: "none"
             });
 
-            // Mini-map (Standard 2D)
             miniMap = new google.maps.Map(document.getElementById("mini-map"), {
                 center: playerPos,
                 zoom: 14,
@@ -132,51 +129,46 @@
         function gameLoop() {
             if (fuel <= 0) return;
 
-            let moved = false;
-            let rotating = false;
             const planeImg = document.getElementById('plane-img');
-            
-            // Speed logic
             let multiplier = keys['Space'] ? 2.5 : 1.0;
             const moveStep = 0.00008 * multiplier;
 
-            // Input Handling
+            let isMoving = false;
+
+            // Heading / Steering
             if (keys['KeyA']) { 
-                currentHeading -= 2.0; 
+                currentHeading -= 1.5; 
                 planeImg.className = 'bank-left';
-                rotating = true;
             } else if (keys['KeyD']) { 
-                currentHeading += 2.0; 
+                currentHeading += 1.5; 
                 planeImg.className = 'bank-right';
-                rotating = true;
             } else {
                 planeImg.className = '';
             }
 
+            // Translation
             if (keys['KeyW']) {
                 playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * moveStep;
                 playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * moveStep;
                 fuel -= (keys['Space'] ? 0.04 : 0.01);
-                moved = true;
+                isMoving = true;
             }
             if (keys['KeyS']) {
                 playerPos.lat -= Math.cos(currentHeading * Math.PI / 180) * (moveStep * 0.5);
                 playerPos.lng -= Math.sin(currentHeading * Math.PI / 180) * (moveStep * 0.5);
                 fuel -= 0.005;
-                moved = true;
+                isMoving = true;
             }
 
-            // 📍 Update Layers based on Input
-            if (moved || rotating) {
-                map.moveCamera({
-                    center: playerPos,
-                    heading: currentHeading
-                });
+            // Sync Cameras
+            map.moveCamera({
+                center: playerPos,
+                heading: currentHeading
+            });
 
-                // ONLY update mini-map center when movement keys are active
-                if (moved) {
-                    miniMap.setCenter(playerPos);
-                }
+            // Force mini-map to follow if movement keys are pressed
+            if (isMoving) {
+                miniMap.setCenter(playerPos);
             }
 
             document.getElementById('fuel-display').innerText = Math.floor(fuel);
