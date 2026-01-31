@@ -94,51 +94,69 @@
 
         function setupThreeJS() {
             const scene = new THREE.Scene();
+            
+            // Avatar Mesh
             const geometry = new THREE.ConeGeometry(5, 15, 4);
             const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, emissive: 0x002200 });
             playerMesh = new THREE.Mesh(geometry, material);
             playerMesh.rotation.x = Math.PI / 2;
             scene.add(playerMesh);
-
+        
             scene.add(new THREE.AmbientLight(0xffffff, 0.8));
             const light = new THREE.PointLight(0xffffff, 1000);
             light.position.set(0, 100, 0);
             scene.add(light);
-
+        
+            // Initialize overlay - we pass the anchor here
             overlay = new ThreeJSOverlayView({
                 map,
                 scene,
-                anchor: { ...playerPos },
+                anchor: { lat: playerPos.lat, lng: playerPos.lng, altitude: playerPos.altitude },
                 THREE
             });
-
+        
             window.addEventListener('keydown', e => keys[e.code] = true);
             window.addEventListener('keyup', e => keys[e.code] = false);
-
+        
             requestAnimationFrame(gameLoop);
         }
-
+        
         function gameLoop() {
             if (fuel <= 0) {
                 document.getElementById('game-over').style.display = 'flex';
                 return;
             }
-
+        
             const moveStep = 0.00007;
-            if (keys['KeyA']) heading -= 2.0;
-            if (keys['KeyD']) heading += 2.0;
+            let moved = false;
+        
+            if (keys['KeyA']) { heading -= 2.0; moved = true; }
+            if (keys['KeyD']) { heading += 2.0; moved = true; }
             if (keys['KeyW']) {
                 playerPos.lat += Math.cos(heading * Math.PI / 180) * moveStep;
                 playerPos.lng += Math.sin(heading * Math.PI / 180) * moveStep;
                 fuel -= 0.02;
+                moved = true;
             }
-
-            overlay.setAnchor({ lat: playerPos.lat, lng: playerPos.lng, altitude: playerPos.altitude });
-            playerMesh.rotation.z = -heading * Math.PI / 180;
+        
+            // FIX: Update the anchor property directly instead of calling setAnchor()
+            if (overlay) {
+                overlay.anchor = { 
+                    lat: playerPos.lat, 
+                    lng: playerPos.lng, 
+                    altitude: playerPos.altitude 
+                };
+            }
+        
+            if (playerMesh) {
+                playerMesh.rotation.z = -heading * Math.PI / 180;
+            }
             
-            map.moveCamera({ center: { lat: playerPos.lat, lng: playerPos.lng }, heading: heading });
-            miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
-
+            if (moved) {
+                map.moveCamera({ center: { lat: playerPos.lat, lng: playerPos.lng }, heading: heading });
+                miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+            }
+        
             document.getElementById('fuel-display').innerText = Math.floor(fuel);
             requestAnimationFrame(gameLoop);
         }
