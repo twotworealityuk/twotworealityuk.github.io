@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>A380 London - Google Edition</title>
+    <title>A380 London - 3D Satellite Edition</title>
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Courier New', Courier, monospace; background: #000; }
         #map { height: 100%; width: 100%; position: absolute; background: #111; }
         
         /* ✈️ Main Plane HUD */
@@ -13,15 +13,15 @@
             z-index: 500; pointer-events: none;
         }
         #plane-img {
-            width: 140px;
+            width: 150px;
             filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6));
             transition: transform 0.1s ease;
         }
 
-        /* 📍 Mini-map Container & Rotating Icon */
+        /* 📍 Mini-map Container */
         #mini-map-wrapper {
             position: absolute; bottom: 30px; right: 30px; width: 200px; height: 200px;
-            border: 3px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
+            border: 2px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
             box-shadow: 0 0 20px rgba(0,0,0,0.8);
         }
         #mini-map { width: 100%; height: 100%; }
@@ -33,17 +33,22 @@
             filter: drop-shadow(0 0 5px #00ff00);
         }
 
+        /* 📟 Professional HUD Panel */
         #ui-panel { 
             position: absolute; top: 20px; left: 20px; z-index: 1000; 
-            background: rgba(0, 0, 0, 0.85); color: #00ff00; padding: 15px; 
-            border: 2px solid #00ff00; border-radius: 8px;
+            background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; 
+            border: 1px solid #00ff00; border-radius: 4px; width: 250px;
+            text-transform: uppercase; letter-spacing: 1px;
         }
+        .control-hint { font-size: 0.75em; color: #00aa00; margin-top: 10px; border-top: 1px solid #004400; padding-top: 10px; }
+        .key { color: #fff; font-weight: bold; background: #004400; padding: 1px 4px; border-radius: 3px; }
+
         #setup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 2000; display: none;
             flex-direction: column; align-items: center; justify-content: center; color: white;
         }
-        input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; }
+        input { width: 300px; padding: 12px; background: #111; border: 1px solid #00ff00; color: white; margin: 10px; }
         button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; }
 
         .bank-left { transform: rotate(-15deg); }
@@ -53,7 +58,7 @@
 <body>
 
     <div id="setup-overlay">
-        <h2 style="color:#00ff00">SYSTEM OFFLINE</h2>
+        <h2 style="color:#00ff00">A380 COMMAND CENTER</h2>
         <input type="text" id="manual-api-key" placeholder="Enter API Key">
         <input type="text" id="manual-map-id" placeholder="Enter Map ID">
         <button id="save-keys-btn">IGNITE ENGINES</button>
@@ -69,8 +74,16 @@
     </div>
 
     <div id="ui-panel">
-        <h3 style="margin:0">A380 PILOT</h3>
-        <p>FUEL: <span id="fuel-display">100</span>%</p>
+        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 5px;">A380-FLIGHT SYSTEMS</div>
+        <div>STATUS: <span style="color: #fff">AIRBORNE</span></div>
+        <div>FUEL: <span id="fuel-display" style="color: #fff">100</span>%</div>
+        
+        <div class="control-hint">
+            <span class="key">W</span> THRUST OVERRIDE<br>
+            <span class="key">S</span> AIR BRAKES<br>
+            <span class="key">A</span> <span class="key">D</span> LATERAL STEER<br>
+            <span class="key">SPACE</span> AFTERBURNER
+        </div>
     </div>
 
     <div id="map"></div>
@@ -115,18 +128,23 @@
         }
 
         function initGame() {
+            // Updated to SATELLITE for Earth-style textures
             map = new google.maps.Map(document.getElementById("map"), {
                 center: playerPos,
-                zoom: 18, tilt: 65, heading: 0,
+                zoom: 18,
+                tilt: 65,
+                heading: 0,
                 mapId: CONFIG.MAP_ID,
-                disableDefaultUI: true, gestureHandling: "none"
+                mapTypeId: 'satellite', // Enabling Earth textures
+                disableDefaultUI: true,
+                gestureHandling: "none"
             });
 
             miniMap = new google.maps.Map(document.getElementById("mini-map"), {
                 center: playerPos,
                 zoom: 14,
                 disableDefaultUI: true,
-                mapTypeId: 'roadmap'
+                mapTypeId: 'roadmap' // Keep roadmap for clarity on mini-map
             });
 
             window.addEventListener('keydown', e => keys[e.code] = true);
@@ -140,29 +158,26 @@
 
             const mainPlane = document.getElementById('plane-img');
             const miniPlane = document.getElementById('mini-plane-icon');
-            let multiplier = keys['Space'] ? 2.5 : 1.0;
+            let multiplier = keys['Space'] ? 3.0 : 1.0;
             const moveStep = 0.00008 * multiplier;
 
-            // Rotation
             if (keys['KeyA']) { 
-                currentHeading -= 1.5; 
+                currentHeading -= 1.8; 
                 mainPlane.className = 'bank-left';
             } else if (keys['KeyD']) { 
-                currentHeading += 1.5; 
+                currentHeading += 1.8; 
                 mainPlane.className = 'bank-right';
             } else {
                 mainPlane.className = '';
             }
 
-            // Apply rotation to mini-map icon
             miniPlane.style.transform = `rotate(${currentHeading}deg)`;
 
-            // Movement
             let moved = false;
             if (keys['KeyW']) {
                 playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * moveStep;
                 playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * moveStep;
-                fuel -= (keys['Space'] ? 0.04 : 0.01);
+                fuel -= (keys['Space'] ? 0.05 : 0.01);
                 moved = true;
             }
             if (keys['KeyS']) {
@@ -172,10 +187,8 @@
                 moved = true;
             }
 
-            // Camera Sync
             map.moveCamera({ center: playerPos, heading: currentHeading });
 
-            // CRITICAL: Updated mini-map follow logic
             if (moved || keys['KeyA'] || keys['KeyD']) {
                 miniMap.setCenter(playerPos);
             }
