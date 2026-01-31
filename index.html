@@ -19,7 +19,7 @@
         
         #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #001122 0%, #000 100%); color: #00ff00; }
         
-        /* 🇬🇧 UK Color Style Title (Restored) */
+        /* 🇬🇧 UK Color Style Title */
         .uk-title {
             font-size: 4em; margin-bottom: 5px; font-weight: 900;
             background: linear-gradient(90deg, #cf142b 0%, #cf142b 10%, #fff 10%, #fff 15%, #00247d 15%, #00247d 85%, #fff 85%, #fff 90%, #cf142b 90%);
@@ -60,8 +60,10 @@
             to { box-shadow: 0 0 25px #cf142b, 0 0 45px #fff; }
         }
 
-        #plane-container { position: absolute; top: 65%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
+        /* ✈️ Original Plane Position for 3D View */
+        #plane-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-100; pointer-events: none; }
         #plane-img { width: 140px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4)); }
+        
         #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 250px; text-transform: uppercase; }
 
         #mini-map-wrapper {
@@ -154,9 +156,9 @@
         }
 
         function initGame() {
-            // RESTORED 3D MODE: Tilt set to 65 for building depth
+            // ORIGINAL 3D CAMERA SETTINGS: Tilt 65, Zoom 18
             map = new google.maps.Map(document.getElementById("map"), {
-                center: playerPos, zoom: 15.5, tilt: 65, heading: 0,
+                center: playerPos, zoom: 18, tilt: 65, heading: 0,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
             
@@ -175,6 +177,8 @@
             const btnText = isSatellite ? 'VIEW: GOOGLE EARTH' : 'VIEW: VECTOR 3D';
             map.setMapTypeId(newMode);
             document.getElementById('mode-toggle-btn').innerText = btnText;
+            // Ensure tilt is reapplied when toggling modes
+            map.setTilt(65);
         }
 
         function gameLoop() {
