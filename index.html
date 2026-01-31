@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>London Flight Pilot 3D</title>
+    <title>London Satellite Pilot 3D</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
-        #map { height: 100%; width: 100%; position: absolute; background: #1a1a1a; }
+        #map { height: 100%; width: 100%; position: absolute; background: #000; }
         
+        /* ✈️ Plane HUD */
         #plane-container {
             position: absolute; top: 50%; left: 50%;
             transform: translate(-50%, -50%);
@@ -14,15 +15,23 @@
         #plane-icon {
             width: 80px; height: 80px;
             filter: drop-shadow(0 0 15px #00ff00);
-            transition: transform 0.1s;
+            transition: transform 0.1s ease;
         }
-        .bank-left { transform: rotate(-20deg); }
-        .bank-right { transform: rotate(20deg); }
+
+        /* Turbo Shake Animation */
+        @keyframes turbo-shake {
+            0% { transform: translate(0,0); }
+            25% { transform: translate(2px, 2px); }
+            50% { transform: translate(-2px, 0); }
+            75% { transform: translate(1px, -2px); }
+            100% { transform: translate(0,0); }
+        }
+        .turbo-active { animation: turbo-shake 0.05s infinite; filter: drop-shadow(0 0 25px #fff) !important; }
 
         #ui-panel { 
             position: absolute; top: 20px; left: 20px; z-index: 1000; 
-            background: rgba(0, 0, 0, 0.8); color: #00ff00; padding: 15px; 
-            border: 1px solid #00ff00; border-radius: 8px;
+            background: rgba(0, 0, 0, 0.85); color: #00ff00; padding: 15px; 
+            border: 1px solid #00ff00; border-radius: 8px; width: 220px;
         }
         #mini-map { 
             position: absolute; bottom: 30px; right: 30px; width: 180px; height: 180px; 
@@ -33,8 +42,8 @@
             background: #000; z-index: 2000; display: none;
             flex-direction: column; align-items: center; justify-content: center; color: white;
         }
-        input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; }
-        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; }
+        input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; border-radius: 5px; }
+        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
     </style>
 </head>
 <body>
@@ -53,9 +62,10 @@
     </div>
 
     <div id="ui-panel">
-        <h3 style="margin:0">PILOT HUD</h3>
+        <h3 style="margin:0">SATELLITE HUD</h3>
         <p>FUEL: <span id="fuel-display">100</span>%</p>
-        <p style="font-size: 0.7em;">HOLD [W] TO FLY</p>
+        <div id="turbo-alert" style="color: #ff0000; font-weight: bold; display: none;">TURBO ENGAGED</div>
+        <p style="font-size: 0.7em; color: #aaa;">[W/S] Thrust/Reverse<br>[A/D] Steering<br>[SPACE] TURBO BOOST</p>
     </div>
 
     <div id="mini-map"></div>
@@ -90,7 +100,7 @@
         function checkKeys() {
             const storedKey = localStorage.getItem('gmaps_api_key');
             const storedId = localStorage.getItem('gmaps_map_id');
-            if (CONFIG.KEY === "") {
+            if (CONFIG.KEY === "" || CONFIG.KEY === "YOUR_API_KEY_HERE") {
                 if (storedKey) { CONFIG.KEY = storedKey; CONFIG.MAP_ID = storedId; loadGoogleMaps(); }
                 else { document.getElementById('setup-overlay').style.display = 'flex'; }
             } else { loadGoogleMaps(); }
@@ -114,24 +124,24 @@
         async function initGame() {
             const { Map } = await google.maps.importLibrary("maps");
             
-            // 📍 London Focus Initialization
-            const mapOptions = {
+            // 🛰️ Big Map - Satellite Vector Mode
+            map = new Map(document.getElementById("map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
-                zoom: 18,        // Deep zoom for 3D buildings
-                tilt: 65,        // Tilted view
-                heading: 0,
+                zoom: 18, 
+                tilt: 65, 
+                heading: currentHeading,
                 mapId: CONFIG.MAP_ID,
+                mapTypeId: 'satellite', // Changes to Satellite
                 disableDefaultUI: true,
                 gestureHandling: "none"
-            };
-
-            map = new Map(document.getElementById("map"), mapOptions);
+            });
             
+            // 🗺️ Mini-Map - Hybrid Mode (Satellite + Labels)
             miniMap = new google.maps.Map(document.getElementById("mini-map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
-                zoom: 14,
+                zoom: 15,
                 disableDefaultUI: true,
-                mapTypeId: 'roadmap'
+                mapTypeId: 'hybrid'
             });
 
             setupThreeJS();
@@ -140,34 +150,57 @@
         function setupThreeJS() {
             const scene = new THREE.Scene();
             overlay = new ThreeJSOverlayView({ map, scene, anchor: { ...playerPos }, THREE });
-
             window.addEventListener('keydown', e => keys[e.code] = true);
             window.addEventListener('keyup', e => keys[e.code] = false);
             requestAnimationFrame(gameLoop);
         }
 
         function gameLoop() {
-            if (fuel <= 0) return;
-            const planeIcon = document.getElementById('plane-icon');
-            planeIcon.classList.remove('bank-left', 'bank-right');
-
-            if (keys['KeyA']) { currentHeading -= 1.5; planeIcon.classList.add('bank-left'); }
-            if (keys['KeyD']) { currentHeading += 1.5; planeIcon.classList.add('bank-right'); }
-
-            if (keys['KeyW']) {
-                const speed = 0.00008;
-                playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * speed;
-                playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * speed;
-                fuel -= 0.01;
-                miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+            if (fuel <= 0) {
+                document.getElementById('ui-panel').innerHTML = "<h2 style='color:red'>OUT OF FUEL</h2>";
+                return;
             }
 
-            // Keep the big map camera locked to the player in London
+            const planeIcon = document.getElementById('plane-icon');
+            const turboAlert = document.getElementById('turbo-alert');
+            let moveMultiplier = 1.0;
+            let fuelDrain = 0.01;
+
+            // 🏎️ Turbo Boost (Space)
+            if (keys['Space']) {
+                moveMultiplier = 2.5;
+                fuelDrain = 0.04;
+                planeIcon.classList.add('turbo-active');
+                turboAlert.style.display = 'block';
+            } else {
+                planeIcon.classList.remove('turbo-active');
+                turboAlert.style.display = 'none';
+            }
+
+            const speed = 0.00009 * moveMultiplier;
+
+            // 🔄 Steering
+            if (keys['KeyA']) currentHeading -= 2.0;
+            if (keys['KeyD']) currentHeading += 2.0;
+
+            // 🚀 Propulsion
+            if (keys['KeyW']) {
+                playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * speed;
+                playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * speed;
+                fuel -= fuelDrain;
+            }
+            if (keys['KeyS']) {
+                playerPos.lat -= Math.cos(currentHeading * Math.PI / 180) * (speed * 0.5);
+                playerPos.lng -= Math.sin(currentHeading * Math.PI / 180) * (speed * 0.5);
+                fuel -= (fuelDrain * 0.5);
+            }
+
+            // 📍 Update Cameras
             map.moveCamera({
                 center: { lat: playerPos.lat, lng: playerPos.lng },
-                heading: currentHeading,
-                zoom: 18 // Ensuring zoom doesn't reset to world view
+                heading: currentHeading
             });
+            miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
 
             document.getElementById('fuel-display').innerText = Math.floor(fuel);
             requestAnimationFrame(gameLoop);
