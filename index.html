@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>A380 London - 3D Satellite Edition</title>
+    <title>A380 London - Map Toggle Edition</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Courier New', Courier, monospace; background: #000; }
         #map { height: 100%; width: 100%; position: absolute; background: #111; }
@@ -33,7 +33,7 @@
             filter: drop-shadow(0 0 5px #00ff00);
         }
 
-        /* 📟 Professional HUD Panel */
+        /* 📟 HUD Panel */
         #ui-panel { 
             position: absolute; top: 20px; left: 20px; z-index: 1000; 
             background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; 
@@ -42,6 +42,14 @@
         }
         .control-hint { font-size: 0.75em; color: #00aa00; margin-top: 10px; border-top: 1px solid #004400; padding-top: 10px; }
         .key { color: #fff; font-weight: bold; background: #004400; padding: 1px 4px; border-radius: 3px; }
+        
+        /* 🔘 Toggle Button Style */
+        #toggle-btn {
+            margin-top: 15px; width: 100%; padding: 8px;
+            background: #004400; color: #00ff00; border: 1px solid #00ff00;
+            cursor: pointer; font-family: inherit; font-weight: bold;
+        }
+        #toggle-btn:hover { background: #006600; color: #fff; }
 
         #setup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -49,8 +57,6 @@
             flex-direction: column; align-items: center; justify-content: center; color: white;
         }
         input { width: 300px; padding: 12px; background: #111; border: 1px solid #00ff00; color: white; margin: 10px; }
-        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; }
-
         .bank-left { transform: rotate(-15deg); }
         .bank-right { transform: rotate(15deg); }
     </style>
@@ -61,7 +67,7 @@
         <h2 style="color:#00ff00">A380 COMMAND CENTER</h2>
         <input type="text" id="manual-api-key" placeholder="Enter API Key">
         <input type="text" id="manual-map-id" placeholder="Enter Map ID">
-        <button id="save-keys-btn">IGNITE ENGINES</button>
+        <button onclick="saveKeys()" style="padding:10px 20px; background:#00ff00; border:none; cursor:pointer;">IGNITE ENGINES</button>
     </div>
 
     <div id="plane-container">
@@ -74,14 +80,15 @@
     </div>
 
     <div id="ui-panel">
-        <div style="font-size: 1.2em; font-weight: bold; margin-bottom: 5px;">A380-FLIGHT SYSTEMS</div>
-        <div>STATUS: <span style="color: #fff">AIRBORNE</span></div>
+        <div style="font-size: 1.1em; font-weight: bold;">A380-SYSTEMS</div>
         <div>FUEL: <span id="fuel-display" style="color: #fff">100</span>%</div>
+        <div>MODE: <span id="mode-text" style="color: #fff">VECTOR 3D</span></div>
+        
+        <button id="toggle-btn" onclick="toggleMapMode()">SWITCH VIEW MODE</button>
         
         <div class="control-hint">
-            <span class="key">W</span> THRUST OVERRIDE<br>
-            <span class="key">S</span> AIR BRAKES<br>
-            <span class="key">A</span> <span class="key">D</span> LATERAL STEER<br>
+            <span class="key">W</span> <span class="key">S</span> THRUST/BRAKE<br>
+            <span class="key">A</span> <span class="key">D</span> STEER<br>
             <span class="key">SPACE</span> AFTERBURNER
         </div>
     </div>
@@ -99,6 +106,7 @@
         let playerPos = { ...CONFIG.START_POS };
         let currentHeading = 0;
         let fuel = 100;
+        let isSatellite = false;
         const keys = {};
 
         function checkKeys() {
@@ -110,7 +118,7 @@
             } else { loadGoogleMaps(); }
         }
 
-        document.getElementById('save-keys-btn').onclick = () => {
+        function saveKeys() {
             const k = document.getElementById('manual-api-key').value.trim();
             const id = document.getElementById('manual-map-id').value.trim();
             if (k && id) {
@@ -118,7 +126,7 @@
                 localStorage.setItem('gmaps_map_id', id);
                 location.reload();
             }
-        };
+        }
 
         function loadGoogleMaps() {
             const script = document.createElement("script");
@@ -128,14 +136,13 @@
         }
 
         function initGame() {
-            // Updated to SATELLITE for Earth-style textures
             map = new google.maps.Map(document.getElementById("map"), {
                 center: playerPos,
                 zoom: 18,
                 tilt: 65,
                 heading: 0,
                 mapId: CONFIG.MAP_ID,
-                mapTypeId: 'satellite', // Enabling Earth textures
+                mapTypeId: 'roadmap', // Initial setting
                 disableDefaultUI: true,
                 gestureHandling: "none"
             });
@@ -144,13 +151,21 @@
                 center: playerPos,
                 zoom: 14,
                 disableDefaultUI: true,
-                mapTypeId: 'roadmap' // Keep roadmap for clarity on mini-map
+                mapTypeId: 'roadmap'
             });
 
             window.addEventListener('keydown', e => keys[e.code] = true);
             window.addEventListener('keyup', e => keys[e.code] = false);
-            
             requestAnimationFrame(gameLoop);
+        }
+
+        function toggleMapMode() {
+            isSatellite = !isSatellite;
+            const newMode = isSatellite ? 'satellite' : 'roadmap';
+            const label = isSatellite ? 'GOOGLE EARTH' : 'VECTOR 3D';
+            
+            map.setMapTypeId(newMode);
+            document.getElementById('mode-text').innerText = label;
         }
 
         function gameLoop() {
