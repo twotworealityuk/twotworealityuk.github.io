@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>London Explorer 3D - Pro Pilot</title>
+    <title>London Explorer 3D - Fixed HUD</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #1a1a1a; }
         #map { height: 100%; width: 100%; position: absolute; }
@@ -12,8 +12,9 @@
             backdrop-filter: blur(10px);
         }
         #mini-map { 
-            position: absolute; bottom: 30px; right: 30px; width: 160px; height: 160px; 
-            border: 2px solid #00ff00; border-radius: 50%; z-index: 100; overflow: hidden; 
+            position: absolute; bottom: 30px; right: 30px; width: 180px; height: 180px; 
+            border: 3px solid #00ff00; border-radius: 50%; z-index: 100; overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
         }
         #setup-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -21,8 +22,7 @@
             flex-direction: column; align-items: center; justify-content: center; color: white;
         }
         input { width: 300px; padding: 12px; background: #111; border: 1px solid #444; color: white; margin: 10px; border-radius: 5px; }
-        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; }
-        #game-over { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; color: #ff4444; }
+        button { padding: 10px 20px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; border-radius: 5px; color: black; }
     </style>
 </head>
 <body>
@@ -34,12 +34,10 @@
         <button id="save-keys-btn">IGNITE ENGINES</button>
     </div>
 
-    <div id="game-over"><h1>CRITICAL POWER LOSS</h1><button onclick="location.reload()">REDEPLOY</button></div>
-    
     <div id="ui-panel">
         <h3 style="margin:0">DRONE HUD</h3>
         <p style="font-family: monospace;">FUEL: <span id="fuel-display">100</span>%</p>
-        <button onclick="window.clearSavedKeys()" style="font-size:10px; opacity:0.6;">FORGET KEYS</button>
+        <button onclick="window.clearSavedKeys()" style="font-size:10px; opacity:0.6; background: none; color: #aaa; border: 1px solid #444;">FORGET KEYS</button>
     </div>
 
     <div id="mini-map"></div>
@@ -102,15 +100,21 @@
             if (google.maps.WebGLOverlayView && !google.maps.WebglOverlayView) { google.maps.WebglOverlayView = google.maps.WebGLOverlayView; }
             const { Map } = await google.maps.importLibrary("maps");
             
+            // MAIN 3D MAP
             map = new Map(document.getElementById("map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
                 zoom: 18, tilt: 65, heading: currentHeading,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
             
-            miniMap = new Map(document.getElementById("mini-map"), {
+            // MINI-MAP: We do NOT use mapId here to prevent rendering conflicts
+            // We use 'roadmap' to ensure fast tile loading
+            miniMap = new google.maps.Map(document.getElementById("mini-map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
-                zoom: 14, mapId: CONFIG.MAP_ID, disableDefaultUI: true
+                zoom: 15,
+                disableDefaultUI: true,
+                mapTypeId: 'roadmap',
+                gestureHandling: "none"
             });
 
             setupThreeJS();
@@ -122,7 +126,7 @@
             const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, emissive: 0x003300 });
             playerMesh = new THREE.Mesh(geometry, material);
             scene.add(playerMesh);
-            scene.add(new THREE.AmbientLight(0xffffff, 1));
+            scene.add(new THREE.AmbientLight(0xffffff, 1.2));
             
             overlay = new ThreeJSOverlayView({ map, scene, anchor: { ...playerPos }, THREE });
 
@@ -132,25 +136,31 @@
         }
 
         function gameLoop() {
-            if (fuel <= 0) { document.getElementById('game-over').style.display = 'flex'; return; }
+            if (fuel <= 0) return;
 
-            // Drift Logic (LERP)
-            if (keys['KeyA']) targetHeading -= 2.5;
-            if (keys['KeyD']) targetHeading += 2.5;
-            currentHeading += (targetHeading - currentHeading) * 0.1; // Smooth rotation
+            if (keys['KeyA']) targetHeading -= 2.0;
+            if (keys['KeyD']) targetHeading += 2.0;
+            currentHeading += (targetHeading - currentHeading) * 0.1;
 
+            let moved = false;
             if (keys['KeyW']) {
                 const speed = 0.00008;
                 playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * speed;
                 playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * speed;
-                fuel -= 0.02;
+                fuel -= 0.01;
+                moved = true;
             }
 
             if (overlay) overlay.anchor = { lat: playerPos.lat, lng: playerPos.lng, altitude: playerPos.altitude };
             if (playerMesh) playerMesh.rotation.y = -currentHeading * Math.PI / 180;
             
+            // Update Maps
             map.moveCamera({ center: { lat: playerPos.lat, lng: playerPos.lng }, heading: currentHeading });
-            miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+            
+            // Optimization: Only update mini-map center every frame if moved
+            if (moved) {
+                miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+            }
             
             document.getElementById('fuel-display').innerText = Math.floor(fuel);
             requestAnimationFrame(gameLoop);
