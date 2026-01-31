@@ -9,53 +9,64 @@
         /* 🎬 Screens */
         #splash-screen, #game-over {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle, #000b1a 0%, #000 100%);
+            background-size: cover; background-position: center;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             z-index: 3000; color: #00ff00; text-align: center;
         }
+        
+        /* Splash Background (UK Flight Theme) */
+        #splash-screen {
+            background-image: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('https://images.unsplash.com/photo-1529655683826-aba9b3e77383?auto=format&fit=crop&w=1920&q=80');
+        }
+        
         #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #001122 0%, #000 100%); }
         
-        /* 🇬🇧 Refined UK "Union Jack" Title Style */
+        /* 🇬🇧 British Title Styling */
         .uk-title {
-            font-size: 3.5em; margin-bottom: 5px; font-weight: 900;
-            background: 
-                linear-gradient(90deg, #cf142b 10%, #fff 10%, #fff 15%, #00247d 15%, #00247d 45%, #fff 45%, #fff 50%, #cf142b 50%, #cf142b 55%, #fff 55%, #fff 60%, #00247d 60%, #00247d 85%, #fff 85%, #fff 90%, #cf142b 90%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.8));
+            font-size: 3.8em; margin-bottom: 5px; font-weight: 900;
+            background: linear-gradient(90deg, #cf142b 0%, #cf142b 10%, #fff 10%, #fff 15%, #00247d 15%, #00247d 85%, #fff 85%, #fff 90%, #cf142b 90%);
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));
         }
 
-        #countdown-container { margin: 20px 0; }
-        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+        #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 20px auto; }
         
+        /* 🔘 Animated Ignition Button */
         #ignition-btn {
-            display: none; padding: 15px 40px; font-size: 1.5em; background: #cf142b; color: #fff;
-            border: 3px solid #fff; cursor: pointer; font-family: inherit; font-weight: bold;
-            box-shadow: 0 0 20px rgba(207, 20, 43, 0.6); margin-top: 20px;
+            display: none; padding: 20px 45px; font-size: 1.6em; background: #cf142b; color: #fff;
+            border: 4px solid #fff; cursor: pointer; font-family: inherit; font-weight: bold;
+            border-radius: 50px; text-transform: uppercase;
+            animation: pulse 1.5s infinite ease-in-out, glow 1.5s infinite alternate;
         }
 
-        /* ✈️ Main Plane HUD */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 10px #cf142b, 0 0 20px #cf142b; }
+            to { box-shadow: 0 0 25px #cf142b, 0 0 45px #fff; }
+        }
+
+        /* ✈️ Plane & HUD */
         #plane-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
-        #plane-img { width: 150px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6)); transition: transform 0.1s ease; }
-
-        /* 📟 HUD Panel */
-        #ui-panel { 
-            position: absolute; top: 20px; left: 20px; z-index: 1000; 
-            background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; 
-            border: 1px solid #00ff00; border-radius: 4px; width: 250px; text-transform: uppercase;
-        }
-        .key { color: #fff; font-weight: bold; background: #004400; padding: 1px 4px; border-radius: 3px; }
-        #toggle-btn { margin-top: 15px; width: 100%; padding: 8px; background: #004400; color: #00ff00; border: 1px solid #00ff00; cursor: pointer; font-family: inherit; }
+        #plane-img { width: 150px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6)); }
+        #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 250px; }
+        
+        /* 🔗 Ending Page Links */
+        .contact-info { margin-top: 25px; font-size: 0.9em; line-height: 1.8; }
+        .contact-info a { color: #00ccff; text-decoration: none; border-bottom: 1px solid transparent; }
+        .contact-info a:hover { border-bottom: 1px solid #00ccff; }
     </style>
 </head>
 <body>
 
     <div id="splash-screen">
         <h1 class="uk-title">AEROVIEW: LONDON</h1>
-        <h2 style="color: #fff; letter-spacing: 5px; opacity: 0.8;">BY KEN LAM</h2>
-        <div id="countdown-container">
-            <div id="countdown">5</div>
-        </div>
+        <h2 style="color: #fff; letter-spacing: 5px;">BY KEN LAM</h2>
+        <div id="countdown-wrap"><div id="countdown">5</div></div>
         <button id="ignition-btn" onclick="igniteEngines()">START YOUR ENGINES</button>
         <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px;">PRE-FLIGHT SYSTEMS CHECK...</p>
     </div>
@@ -63,35 +74,40 @@
     <div id="game-over">
         <h1 style="font-size: 3em; color: #fff; text-shadow: 0 0 20px #00ccff;">Wonderful Flight!</h1>
         <p style="font-size: 1.2em;">You've successfully explored the skies of London.</p>
-        <h2 style="color: #00ff00; margin-top: 20px;">Thank you for flying with AeroView, Captain!</h2>
-        <p style="color: #aaa; margin-top: 10px;">Safe travels until we meet again.</p>
-        <button onclick="location.reload()" style="background:#00ff00; border: none; color: #000; padding: 12px 25px; cursor: pointer; margin-top: 30px; font-weight: bold; border-radius: 5px;">FLY AGAIN</button>
+        <h2 style="color: #00ff00; margin-top: 15px;">Thank you for flying with AeroView, Captain!</h2>
+        
+        <div class="contact-info">
+            <div style="font-weight: bold; color: #fff; margin-bottom: 5px;">Developed by Ken Lam</div>
+            LinkedIn: <a href="https://www.linkedin.com/in/ken-yiu-kei-lam/" target="_blank">ken-yiu-kei-lam</a><br>
+            Email: <a href="mailto:kenyklam330@gmail.com">kenyklam330@gmail.com</a>
+        </div>
+
+        <button onclick="location.reload()" style="background:#00ff00; border: none; color: #000; padding: 12px 25px; cursor: pointer; margin-top: 25px; font-weight: bold; border-radius: 5px;">FLY AGAIN</button>
     </div>
 
     <div id="plane-container"><img id="plane-img" src="Plane_icon_nose_up.png"></div>
 
     <div id="ui-panel">
-        <div style="font-weight: bold; border-bottom: 1px solid #004400; padding-bottom: 5px; margin-bottom: 10px;">A380-SYSTEMS</div>
-        <div>SPEED: <span id="speed-display" style="color: #fff">1</span> KTS</div>
-        <div>FUEL:  <span id="fuel-display" style="color: #fff">100</span>%</div>
-        <button id="toggle-btn" onclick="toggleMapMode()">VIEW: VECTOR 3D</button>
-        <div style="font-size: 0.7em; color: #00aa00; margin-top: 10px; border-top: 1px solid #004400; padding-top: 10px;">
-            <span class="key">W</span> ACCEL | <span class="key">S</span> DECEL<br>
-            <span class="key">A</span> <span class="key">D</span> STEER (BANKING)
+        <div style="font-weight: bold; border-bottom: 1px solid #004400; padding-bottom: 5px;">A380-SYSTEMS</div>
+        <div style="margin: 10px 0;">
+            SPEED: <span id="speed-display" style="color: #fff">1</span> KTS<br>
+            FUEL:  <span id="fuel-display" style="color: #fff">100</span>%
         </div>
+        <button onclick="toggleMapMode()" style="width:100%; padding:8px; background:#004400; color:#00ff00; border:1px solid #00ff00; cursor:pointer; font-family:inherit;">VIEW: VECTOR 3D</button>
     </div>
 
     <div id="map"></div>
 
     <script>
         let CONFIG = { KEY: "AIzaSyCA8jtTwPhL1I09ZDVKZdlhL9ksTJFBCZE", MAP_ID: "b90ea2dd1a5427b4880e8762", START_POS: { lat: 51.5033, lng: -0.1195 } };
-        let map, miniMap, isSatellite = false, gameRunning = false;
+        let map, isSatellite = false, gameRunning = false;
         let playerPos = { ...CONFIG.START_POS }, currentHeading = 0, fuel = 100;
         
+        // 🛫 Speed limited to 10 KTS
         const SCALE_FACTOR = 0.000005;
         let currentSpeed = 1 * SCALE_FACTOR; 
         const MIN_SPEED = 1 * SCALE_FACTOR;
-        const MAX_SPEED = 20 * SCALE_FACTOR;
+        const MAX_SPEED = 10 * SCALE_FACTOR; 
         const keys = {};
 
         function startCountdown() {
@@ -101,7 +117,7 @@
                 document.getElementById('countdown').innerText = count;
                 if (count <= 0) {
                     clearInterval(timer);
-                    document.getElementById('countdown-container').style.display = 'none';
+                    document.getElementById('countdown-wrap').style.display = 'none';
                     document.getElementById('ignition-btn').style.display = 'block';
                     document.getElementById('systems-text').innerText = "SYSTEMS READY FOR IGNITION";
                 }
@@ -109,19 +125,11 @@
         }
 
         function igniteEngines() {
-            const splash = document.getElementById('splash-screen');
-            splash.style.opacity = '0';
+            document.getElementById('splash-screen').style.opacity = '0';
             setTimeout(() => { 
-                splash.style.display = 'none';
+                document.getElementById('splash-screen').style.display = 'none';
                 gameRunning = true;
             }, 800);
-        }
-
-        function loadGoogleMaps() {
-            const script = document.createElement("script");
-            script.src = `https://maps.googleapis.com/maps/api/js?key=${CONFIG.KEY}&v=beta&libraries=maps&callback=initGame`;
-            script.async = true;
-            document.head.appendChild(script);
         }
 
         function initGame() {
@@ -137,25 +145,22 @@
         function toggleMapMode() {
             isSatellite = !isSatellite;
             map.setMapTypeId(isSatellite ? 'satellite' : 'roadmap');
-            document.getElementById('toggle-btn').innerText = isSatellite ? 'VIEW: GOOGLE EARTH' : 'VIEW: VECTOR 3D';
         }
 
         function gameLoop() {
             if (!gameRunning) { requestAnimationFrame(gameLoop); return; }
             if (fuel <= 0) { document.getElementById('game-over').style.display = 'flex'; return; }
 
-            if (keys['KeyW']) currentSpeed = Math.min(currentSpeed + (0.02 * SCALE_FACTOR), MAX_SPEED);
-            if (keys['KeyS']) currentSpeed = Math.max(currentSpeed - (0.02 * SCALE_FACTOR), MIN_SPEED);
+            if (keys['KeyW']) currentSpeed = Math.min(currentSpeed + (0.01 * SCALE_FACTOR), MAX_SPEED);
+            if (keys['KeyS']) currentSpeed = Math.max(currentSpeed - (0.01 * SCALE_FACTOR), MIN_SPEED);
 
-            const mainPlane = document.getElementById('plane-img');
-            if (keys['KeyA']) { currentHeading -= 1.2; mainPlane.className = 'bank-left'; }
-            else if (keys['KeyD']) { currentHeading += 1.2; mainPlane.className = 'bank-right'; }
-            else { mainPlane.className = ''; }
+            if (keys['KeyA']) { currentHeading -= 1.0; }
+            else if (keys['KeyD']) { currentHeading += 1.0; }
 
             playerPos.lat += Math.cos(currentHeading * Math.PI / 180) * currentSpeed;
             playerPos.lng += Math.sin(currentHeading * Math.PI / 180) * currentSpeed;
             
-            fuel -= (currentSpeed * 250);
+            fuel -= (currentSpeed * 300);
 
             document.getElementById('fuel-display').innerText = Math.max(0, Math.floor(fuel));
             document.getElementById('speed-display').innerText = Math.floor(currentSpeed / SCALE_FACTOR);
@@ -164,15 +169,14 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Initialize script
+        // Auto-run logic
         const storedKey = localStorage.getItem('gmaps_api_key');
-        if (storedKey) { 
-            CONFIG.KEY = storedKey; 
-            CONFIG.MAP_ID = localStorage.getItem('gmaps_map_id'); 
-            loadGoogleMaps(); 
+        if (storedKey) {
+            const script = document.createElement("script");
+            script.src = `https://maps.googleapis.com/maps/api/js?key=${storedKey}&v=beta&libraries=maps&callback=initGame`;
+            document.head.appendChild(script);
+            CONFIG.MAP_ID = localStorage.getItem('gmaps_map_id');
             startCountdown();
-        } else {
-            // Re-trigger your setup-overlay here if needed
         }
     </script>
 </body>
