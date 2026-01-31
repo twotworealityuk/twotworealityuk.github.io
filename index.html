@@ -67,10 +67,11 @@
         }
         #plane-img { width: 140px; height: auto; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.6)); }
         
-        #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 2500; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 260px; text-transform: uppercase; }
+        /* 🕹️ HUD Panel */
+        #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 2500; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 15px; border: 1px solid #00ff00; width: 240px; text-transform: uppercase; }
 
-        /* ⌨️ Controls HUD Style */
-        .controls-legend { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #004400; font-size: 0.85em; color: #00cc00; }
+        /* ⌨️ Controls HUD Style - Smaller Font */
+        .controls-legend { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #004400; font-size: 0.7em; color: #00aa00; line-height: 1.4; }
         .key-hint { color: #fff; font-weight: bold; }
 
         #mini-map-wrapper {
@@ -121,19 +122,19 @@
     </div>
 
     <div id="ui-panel">
-        <div style="font-weight: bold; border-bottom: 1px solid #004400; padding-bottom: 5px;">A380-SYSTEMS</div>
-        <div style="margin: 10px 0;">
+        <div style="font-weight: bold; border-bottom: 1px solid #004400; padding-bottom: 5px; margin-bottom: 10px;">A380-SYSTEMS</div>
+        <div style="margin-bottom: 15px; font-size: 0.9em;">
             SPEED: <span id="speed-display" style="color: #fff">1</span> KTS<br>
             FUEL:  <span id="fuel-display" style="color: #fff">100</span>%
         </div>
+
+        <button id="mode-toggle-btn" onclick="toggleMapMode()" style="width:100%; padding:8px; background:#004400; color:#00ff00; border:1px solid #00ff00; cursor:pointer; font-family:inherit; font-size: 0.8em; font-weight: bold;">VIEW: VECTOR 3D</button>
 
         <div class="controls-legend">
             [<span class="key-hint">W</span>] ACCELERATE<br>
             [<span class="key-hint">S</span>] DECELERATE<br>
             [<span class="key-hint">A/D</span>] STEER LEFT/RIGHT
         </div>
-        <br>
-        <button id="mode-toggle-btn" onclick="toggleMapMode()" style="width:100%; padding:8px; background:#004400; color:#00ff00; border:1px solid #00ff00; cursor:pointer; font-family:inherit;">VIEW: VECTOR 3D</button>
     </div>
 
     <div id="map"></div>
