@@ -1,23 +1,60 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>London Navigator 3D</title>
+    <title>London Explorer 3D</title>
     <style>
         body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; background: #000; }
         #map { height: 100%; width: 100%; position: absolute; }
-        #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 100; background: rgba(10,10,10,0.9); color: #00ff00; padding: 20px; border: 2px solid #00ff00; border-radius: 12px; width: 260px; }
-        .stat { font-family: 'Courier New', monospace; font-size: 1.2em; margin: 10px 0; }
-        #mini-map { position: absolute; bottom: 30px; right: 30px; width: 180px; height: 180px; border: 3px solid #00ff00; border-radius: 50%; z-index: 100; overflow: hidden; }
+        
+        /* UI Panels */
+        #ui-panel { 
+            position: absolute; top: 20px; left: 20px; z-index: 100; 
+            background: rgba(10, 10, 10, 0.9); color: #00ff00; padding: 20px; 
+            border: 2px solid #00ff00; border-radius: 12px; width: 260px;
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.3);
+        }
+        #mini-map { 
+            position: absolute; bottom: 30px; right: 30px; width: 180px; height: 180px; 
+            border: 3px solid #00ff00; border-radius: 50%; z-index: 100; overflow: hidden; 
+        }
+
+        /* Key Setup Overlay */
+        #setup-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 2000; display: none;
+            flex-direction: column; align-items: center; justify-content: center; color: white;
+        }
+        .input-group { margin: 15px; width: 300px; }
+        input { width: 100%; padding: 10px; background: #222; border: 1px solid #00ff00; color: white; border-radius: 5px; }
+        button { padding: 12px 24px; background: #00ff00; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
         #game-over { display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; color: #ff4444; }
-        button { padding: 15px 30px; background: #00ff00; border: none; cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
+
+    <div id="setup-overlay">
+        <h2>🔧 Setup API Credentials</h2>
+        <p>API Keys were not detected. Please enter them manually:</p>
+        <div class="input-group">
+            <label>Google Maps API Key:</label>
+            <input type="text" id="manual-api-key" placeholder="AIza...">
+        </div>
+        <div class="input-group">
+            <label>Map ID:</label>
+            <input type="text" id="manual-map-id" placeholder="123abc456...">
+        </div>
+        <button id="save-keys-btn">START GAME</button>
+        <p style="font-size: 0.8em; color: #888; margin-top: 20px;">Saved to browser storage locally.</p>
+    </div>
+
     <div id="game-over"><h1>MISSION FAILED</h1><button onclick="location.reload()">RETRY</button></div>
+    
     <div id="ui-panel">
         <h2 style="margin:0">LONDON PILOT</h2>
-        <div class="stat">FUEL: <span id="fuel-display">100</span>%</div>
+        <div style="font-family: monospace; font-size: 1.2em; margin: 10px 0;">FUEL: <span id="fuel-display">100</span>%</div>
     </div>
+
     <div id="mini-map"></div>
     <div id="map"></div>
 
@@ -35,10 +72,11 @@
         import * as THREE from 'three';
         import { ThreeJSOverlayView } from '@googlemaps/three';
 
-        const CONFIG = {
+        // PLACEHOLDERS (Filled by GitHub Actions)
+        let CONFIG = {
             KEY: "YOUR_API_KEY_HERE",
             MAP_ID: "YOUR_MAP_ID_HERE",
-            START_POS: { lat: 51.5033, lng: -0.1195, altitude: 70 }
+            START_POS: { lat: 51.5033, lng: -0.1195, altitude: 75 }
         };
 
         let map, miniMap, overlay, playerMesh;
@@ -47,32 +85,87 @@
         let fuel = 100;
         const keys = {};
 
-        async function init() {
+        // --- KEY HANDLING LOGIC ---
+        function checkKeys() {
+            // Priority 1: GitHub Action Injected Key
+            // Priority 2: localStorage (Manual input from previous session)
+            const storedKey = localStorage.getItem('gmaps_api_key');
+            const storedId = localStorage.getItem('gmaps_map_id');
+
+            if (CONFIG.KEY === "YOUR_API_KEY_HERE" && storedKey) {
+                CONFIG.KEY = storedKey;
+                CONFIG.MAP_ID = storedId;
+            }
+
+            // If still placeholders, show the box
+            if (CONFIG.KEY === "YOUR_API_KEY_HERE" || CONFIG.KEY === "") {
+                document.getElementById('setup-overlay').style.display = 'flex';
+            } else {
+                loadGoogleMaps();
+            }
+        }
+
+        document.getElementById('save-keys-btn').onclick = () => {
+            const k = document.getElementById('manual-api-key').value.trim();
+            const id = document.getElementById('manual-map-id').value.trim();
+            if (k && id) {
+                localStorage.setItem('gmaps_api_key', k);
+                localStorage.setItem('gmaps_map_id', id);
+                location.reload();
+            } else {
+                alert("Please enter both fields.");
+            }
+        };
+
+        // --- MAP LOADER ---
+        function loadGoogleMaps() {
+            const script = document.createElement("script");
+            const params = new URLSearchParams({
+                key: CONFIG.KEY,
+                v: "beta",
+                libraries: "maps,marker",
+                callback: "initGame",
+                map_ids: CONFIG.MAP_ID
+            });
+            script.src = `https://maps.googleapis.com/maps/api/js?${params.toString()}`;
+            script.async = true;
+            window.initGame = initGame;
+            document.head.appendChild(script);
+        }
+
+        async function initGame() {
+            // Fix case sensitivity
             if (google.maps.WebGLOverlayView && !google.maps.WebglOverlayView) {
                 google.maps.WebglOverlayView = google.maps.WebGLOverlayView;
             }
+
             const { Map } = await google.maps.importLibrary("maps");
+            
             map = new Map(document.getElementById("map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
                 zoom: 18, tilt: 65, heading: heading,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
+            
             miniMap = new Map(document.getElementById("mini-map"), {
                 center: { lat: playerPos.lat, lng: playerPos.lng },
                 zoom: 14, mapId: CONFIG.MAP_ID, disableDefaultUI: true
             });
+
             setupThreeJS();
         }
 
         function setupThreeJS() {
             const scene = new THREE.Scene();
-            const geometry = new THREE.ConeGeometry(5, 15, 4);
-            const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, emissive: 0x002200 });
+            const geometry = new THREE.ConeGeometry(4, 12, 4);
+            const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, emissive: 0x00ff00, emissiveIntensity: 0.5 });
             playerMesh = new THREE.Mesh(geometry, material);
             playerMesh.rotation.x = Math.PI / 2;
             scene.add(playerMesh);
+
             scene.add(new THREE.AmbientLight(0xffffff, 0.8));
             overlay = new ThreeJSOverlayView({ map, scene, anchor: { ...playerPos }, THREE });
+
             window.addEventListener('keydown', e => keys[e.code] = true);
             window.addEventListener('keyup', e => keys[e.code] = false);
             requestAnimationFrame(gameLoop);
@@ -80,25 +173,32 @@
 
         function gameLoop() {
             if (fuel <= 0) { document.getElementById('game-over').style.display = 'flex'; return; }
-            if (keys['KeyA']) heading -= 2.0;
-            if (keys['KeyD']) heading += 2.0;
+
+            const moveStep = 0.00007;
+            let moved = false;
+
+            if (keys['KeyA']) { heading -= 2.0; moved = true; }
+            if (keys['KeyD']) { heading += 2.0; moved = true; }
             if (keys['KeyW']) {
-                playerPos.lat += Math.cos(heading * Math.PI / 180) * 0.00007;
-                playerPos.lng += Math.sin(heading * Math.PI / 180) * 0.00007;
+                playerPos.lat += Math.cos(heading * Math.PI / 180) * moveStep;
+                playerPos.lng += Math.sin(heading * Math.PI / 180) * moveStep;
                 fuel -= 0.02;
+                moved = true;
             }
-            if (overlay) { overlay.anchor = { lat: playerPos.lat, lng: playerPos.lng, altitude: playerPos.altitude }; }
-            if (playerMesh) { playerMesh.rotation.z = -heading * Math.PI / 180; }
-            map.moveCamera({ center: { lat: playerPos.lat, lng: playerPos.lng }, heading: heading });
-            miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+
+            if (overlay) overlay.anchor = { lat: playerPos.lat, lng: playerPos.lng, altitude: playerPos.altitude };
+            if (playerMesh) playerMesh.rotation.z = -heading * Math.PI / 180;
+            
+            if (moved) {
+                map.moveCamera({ center: { lat: playerPos.lat, lng: playerPos.lng }, heading: heading });
+                miniMap.setCenter({ lat: playerPos.lat, lng: playerPos.lng });
+            }
+
             document.getElementById('fuel-display').innerText = Math.floor(fuel);
             requestAnimationFrame(gameLoop);
         }
 
-        (function(g){
-            var db=document, p="https://maps.googleapis.com/maps/api/js?key="+CONFIG.KEY+"&v=beta&libraries=maps,marker&callback=init&map_ids="+CONFIG.MAP_ID;
-            var s=db.createElement("script"); window.init=init; s.src=p; db.head.appendChild(s);
-        })(window);
+        checkKeys();
     </script>
 </body>
 </html>
