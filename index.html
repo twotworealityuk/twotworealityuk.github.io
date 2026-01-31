@@ -21,12 +21,15 @@
         
         #game-over { display: none; z-index: 5000; background: radial-gradient(circle, #001122 0%, #000 100%); }
         
-        /* 🇬🇧 Union Jack Title Styling */
+        /* 🇬🇧 Union Jack Title with BOLD OUTLINE */
         .uk-title {
             font-size: 3.8em; margin-bottom: 5px; font-weight: 900;
             background: linear-gradient(90deg, #cf142b 0%, #cf142b 10%, #fff 10%, #fff 15%, #00247d 15%, #00247d 85%, #fff 85%, #fff 90%, #cf142b 90%);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent;
+            /* Bold Outline Implementation */
+            -webkit-text-stroke: 2px #ffffff;
+            filter: drop-shadow(0 0 15px rgba(0,0,0,0.9));
         }
 
         #countdown { font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; width: 100px; height: 100px; display: flex; align-items: center; justify-content: center; margin: 20px auto; }
@@ -60,7 +63,7 @@
             border: 1px solid #00ff00; width: 250px; text-transform: uppercase;
         }
 
-        /* 📍 Mini-map Wrapper (RESTORED) */
+        /* 📍 Mini-map Wrapper */
         #mini-map-wrapper {
             position: absolute; bottom: 30px; right: 30px; width: 200px; height: 200px;
             border: 2px solid #00ff00; border-radius: 50%; z-index: 1000; overflow: hidden;
@@ -113,7 +116,7 @@
             SPEED: <span id="speed-display" style="color: #fff">1</span> KTS<br>
             FUEL:  <span id="fuel-display" style="color: #fff">100</span>%
         </div>
-        <button onclick="toggleMapMode()" style="width:100%; padding:8px; background:#004400; color:#00ff00; border:1px solid #00ff00; cursor:pointer; font-family:inherit;">VIEW: VECTOR 3D</button>
+        <button id="mode-toggle-btn" onclick="toggleMapMode()" style="width:100%; padding:8px; background:#004400; color:#00ff00; border:1px solid #00ff00; cursor:pointer; font-family:inherit;">VIEW: VECTOR 3D</button>
     </div>
 
     <div id="map"></div>
@@ -168,7 +171,11 @@
 
         function toggleMapMode() {
             isSatellite = !isSatellite;
-            map.setMapTypeId(isSatellite ? 'satellite' : 'roadmap');
+            const newMode = isSatellite ? 'satellite' : 'roadmap';
+            const btnText = isSatellite ? 'VIEW: GOOGLE EARTH' : 'VIEW: VECTOR 3D';
+            
+            map.setMapTypeId(newMode);
+            document.getElementById('mode-toggle-btn').innerText = btnText;
         }
 
         function gameLoop() {
@@ -196,7 +203,6 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // Key management
         const storedKey = localStorage.getItem('gmaps_api_key');
         if (storedKey) {
             const script = document.createElement("script");
