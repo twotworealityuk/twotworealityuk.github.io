@@ -13,7 +13,7 @@
             z-index: 3000; text-align: center; transition: opacity 0.8s ease;
         }
         
-        /* ☀️ Generated Sunny Sky Background */
+        /* ☀️ Sunny Sky Background */
         #splash-screen {
             background: linear-gradient(180deg, #4da6ff 0%, #ffffff 100%);
         }
@@ -30,12 +30,17 @@
             letter-spacing: 2px;
         }
 
-        /* Green Countdown */
+        /* Green Countdown & Systems Text */
         #countdown { 
             font-size: 4em; border: 3px solid #00ff00; border-radius: 50%; 
             width: 100px; height: 100px; display: flex; align-items: center; 
             justify-content: center; margin: 20px auto; 
             background: rgba(0,0,0,0.6); color: #00ff00; 
+        }
+        
+        #systems-text {
+            letter-spacing: 2px; margin-top: 20px; font-weight: bold; 
+            color: #00ff00; text-shadow: 1px 1px 3px #000;
         }
         
         /* 🔘 Animated Ignition Button */
@@ -57,8 +62,8 @@
         }
 
         /* ✈️ Plane & HUD */
-        #plane-container { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
-        #plane-img { width: 150px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4)); }
+        #plane-container { position: absolute; top: 55%; left: 50%; transform: translate(-50%, -50%); z-index: 500; pointer-events: none; }
+        #plane-img { width: 140px; filter: drop-shadow(0 0 15px rgba(0, 255, 0, 0.4)); }
         #ui-panel { position: absolute; top: 20px; left: 20px; z-index: 1000; background: rgba(0, 20, 0, 0.85); color: #00ff00; padding: 20px; border: 1px solid #00ff00; width: 250px; text-transform: uppercase; }
 
         /* 📍 Mini-map Wrapper */
@@ -85,7 +90,7 @@
         <h2 style="color: #00247d; letter-spacing: 5px;">BY KEN LAM</h2>
         <div id="countdown-wrap"><div id="countdown">5</div></div>
         <button id="ignition-btn" onclick="igniteEngines()">START YOUR ENGINES</button>
-        <p id="systems-text" style="letter-spacing: 2px; margin-top: 20px; font-weight: bold; color: #00ff00; text-shadow: 1px 1px 3px #000;">PRE-FLIGHT SYSTEMS CHECK...</p>
+        <p id="systems-text">PRE-FLIGHT SYSTEMS CHECK...</p>
     </div>
 
     <div id="game-over">
@@ -152,9 +157,11 @@
         }
 
         function initGame() {
-            // Camera Adjustment: Reduced zoom to 17.5 and decreased tilt to 35 to see more horizon/location
+            // Updated Camera for Wide Horizon View
+            // Zoom lowered to 16 for a much wider perspective
+            // Tilt set to 25 to show more sky/horizon and avoid building collision
             map = new google.maps.Map(document.getElementById("map"), {
-                center: playerPos, zoom: 17.5, tilt: 35, heading: 0,
+                center: playerPos, zoom: 16, tilt: 25, heading: 0,
                 mapId: CONFIG.MAP_ID, disableDefaultUI: true, gestureHandling: "none"
             });
             
