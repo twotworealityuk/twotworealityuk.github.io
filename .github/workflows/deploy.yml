@@ -1,4 +1,4 @@
-name: Deploy London Game
+name: Deploy London 3D Browser-based Game
 on:
   push:
     branches: [ main ]
