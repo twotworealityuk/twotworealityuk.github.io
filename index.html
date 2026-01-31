@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>London 3D: Pro Pilot Explorer</title>
+    <style>
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; font-family: 'Segoe UI', sans-serif; }
+        #map { height: 100%; width: 100%; position: absolute; }
+        #game-ui { 
+            position: absolute; top: 20px; left: 20px; z-index: 100; 
+            background: rgba(0,0,0,0.8); color: #00ff00; padding: 20px; 
+            border: 2px solid #00ff00; border-radius: 8px; width: 280px;
+        }
+        .kbd { background: #333; padding: 2px 6px; border-radius: 4px; border: 1px solid #777; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+
+    <div id="game-ui">
+        <h2 style="margin-top:0">LONDON PILOT v1.0</h2>
+        <p>Target: <b>The London Eye</b></p>
+        <p><span class="kbd">W</span> <span class="kbd">S</span> Move Forward/Back</p>
+        <p><span class="kbd">A</span> <span class="kbd">D</span> Rotate Drone</p>
+        <hr/>
+        <div id="telemetry">ALTITUDE: <span id="alt">100</span>m</div>
+    </div>
+
+    <div id="map"></div>
+
+    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+            "three/examples/jsm/loaders/GLTFLoader": "https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js",
+            "@googlemaps/three": "https://unpkg.com/@googlemaps/three@1.0.2/dist/index.esm.js"
+        }
+    }
+    </script>
+
+    <script type="module">
+        import * as THREE from 'three';
+        import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader';
+        import { ThreeJSOverlayView } from '@googlemaps/three';
+
+        let map, overlay, playerMesh;
+        let playerPos = { lat: 51.5033, lng: -0.1195, altitude: 50 };
+        let heading = 0;
+        const keys = {};
+
+        // 1. Initialize Google Map
+        async function initMap() {
+            const { Map } = await google.maps.importLibrary("maps");
+            
+            map = new Map(document.getElementById("map"), {
+                center: { lat: playerPos.lat, lng: playerPos.lng },
+                zoom: 18,
+                tilt: 65,
+                heading: 0,
+                mapId: "YOUR_MAP_ID_HERE", // REQUIRED FOR 3D
+                disableDefaultUI: true
+            });
+
+            setupGameOverlay();
+        }
+
+        // 2. Setup Three.js Overlay
+        function setupGameOverlay() {
+            const scene = new THREE.Scene();
+            
+            // Add Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 1.0);
+            scene.add(ambientLight);
+
+            // Create Player Avatar (A simple Green Diamond for now)
+            const geometry = new THREE.OctahedronGeometry(5, 0);
+            const material = new THREE.MeshPhongMaterial({ color: 0x00ff00, emissive: 0x003300 });
+            playerMesh = new THREE.Mesh(geometry, material);
+            scene.add(playerMesh);
+
+            // Initialize the Overlay
+            overlay = new ThreeJSOverlayView({
+                map,
+                scene,
+                anchor: { lat: playerPos.lat, lng: playerPos.lng, altitude: playerPos.altitude },
+                THREE
+            });
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // 3. Movement Logic
+        function gameLoop() {
+            const moveStep = 0.00005;
+            const rotStep = 2.0;
+
+            if (keys['KeyW']) {
+                playerPos.lat += Math.cos(heading * Math.PI / 180) * moveStep;
+                playerPos.lng += Math.sin(heading * Math.PI / 180) * moveStep;
+            }
+            if (keys['KeyS']) {
+                playerPos.lat -= Math.cos(heading * Math.PI / 180) * moveStep;
+                playerPos.lng -= Math.sin(heading * Math.PI / 180) * moveStep;
+            }
+            if (keys['KeyA']) heading -= rotStep;
+            if (keys['KeyD']) heading += rotStep;
+
+            // Sync Map Camera and Player Mesh
+            if (playerMesh) {
+                // Move the Three.js Anchor to follow coordinates
+                overlay.setAnchor({ lat: playerPos.lat, lng: playerPos.lng, altitude: playerPos.altitude });
+                playerMesh.rotation.y = -heading * Math.PI / 180;
+                
+                // Move the Map camera to follow the player
+                map.moveCamera({
+                    center: { lat: playerPos.lat, lng: playerPos.lng },
+                    heading: heading
+                });
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        // Input Listeners
+        window.addEventListener('keydown', e => keys[e.code] = true);
+        window.addEventListener('keyup', e => keys[e.code] = false);
+
+        // Load Maps API
+        (function(g){var db=document,qs="querySelector",cb="callback",p="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&v=beta&libraries=maps,marker&callback=initMap";var s=db.createElement("script");window.initMap=initMap;s.src=p;db.head.appendChild(s);})();
+
+    </script>
+</body>
+</html>
