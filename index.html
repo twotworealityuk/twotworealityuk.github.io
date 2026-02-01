@@ -118,7 +118,7 @@
             const storedId = localStorage.getItem('gmaps_map_id');
 
             // 1. Check if GitHub Action injected real keys
-            if (CONFIG_FROM_GITHUB.API_KEY !== "AIzaSyCA8jtTwPhL1I09ZDVKZdlhL9ksTJFBCZE" && CONFIG_FROM_GITHUB.API_KEY !== "") {
+            if (CONFIG_FROM_GITHUB.API_KEY !== "") {
                 loadGoogleMaps(CONFIG_FROM_GITHUB.API_KEY, CONFIG_FROM_GITHUB.MAP_ID);
             } 
             // 2. Check LocalStorage fallback
