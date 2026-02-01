@@ -11,8 +11,8 @@ jobs:
 
       - name: Inject Secrets
         run: |
-          sed -i "s/__API_KEY__/${{ secrets.GMAPS_API_KEY }}/g" index.html
-          sed -i "s/__MAP_ID__/${{ secrets.GMAPS_MAP_ID }}/g" index.html
+          sed -i "s/AIzaSyCA8jtTwPhL1I09ZDVKZdlhL9ksTJFBCZE/${{ secrets.GMAPS_API_KEY }}/g" index.html
+          sed -i "s/b90ea2dd1a5427b4880e8762/${{ secrets.GMAPS_MAP_ID }}/g" index.html
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
