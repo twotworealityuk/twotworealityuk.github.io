@@ -14,8 +14,8 @@ jobs:
       # This step ensures the secrets actually exist before trying to use them
       - name: Verify Secrets
         run: |
-          if [ -z "${{ secrets.GMAPS_API_KEY }}" ]; then echo "SECRET MAPS_API_KEY IS MISSING"; exit 1; fi
-          if [ -z "${{ secrets.GMAPS_MAP_ID }}" ]; then echo "SECRET MAPS_ID IS MISSING"; exit 1; fi
+          if [ -z "${{ secrets.GMAPS_API_KEY }}" ]; then echo "SECRET GMAPS_API_KEY IS MISSING"; exit 1; fi
+          if [ -z "${{ secrets.GMAPS_MAP_ID }}" ]; then echo "SECRET GMAPS_MAP_ID IS MISSING"; exit 1; fi
 
       - name: Inject API Keys
         run: |
