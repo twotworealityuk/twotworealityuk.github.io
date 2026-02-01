@@ -14,14 +14,14 @@ jobs:
       # This step ensures the secrets actually exist before trying to use them
       - name: Verify Secrets
         run: |
-          if [ -z "${{ secrets.MAPS_API_KEY }}" ]; then echo "SECRET MAPS_API_KEY IS MISSING"; exit 1; fi
-          if [ -z "${{ secrets.MAPS_ID }}" ]; then echo "SECRET MAPS_ID IS MISSING"; exit 1; fi
+          if [ -z "${{ secrets.GMAPS_API_KEY }}" ]; then echo "SECRET MAPS_API_KEY IS MISSING"; exit 1; fi
+          if [ -z "${{ secrets.GMAPS_MAP_ID }}" ]; then echo "SECRET MAPS_ID IS MISSING"; exit 1; fi
 
       - name: Inject API Keys
         run: |
           # We use | as a delimiter in sed to avoid issues with special characters in keys
-          sed -i "s|YOUR_API_KEY_HERE|${{ secrets.MAPS_API_KEY }}|g" index.html
-          sed -i "s|YOUR_MAP_ID_HERE|${{ secrets.MAPS_ID }}|g" index.html
+          sed -i "s/__API_KEY__/${{ secrets.GMAPS_API_KEY }}/g" index.html
+          sed -i "s/__MAP_ID__/${{ secrets.GMAPS_MAP_ID }}/g" index.html
 
       - name: Deploy to GitHub Pages
         uses: JamesIves/github-pages-deploy-action@v4
